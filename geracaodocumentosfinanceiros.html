@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>S. G. D. C. & H.: MÓDULO FINANCEIRO.</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+    <style>
+        /* Estilos personalizados */
+        body {
+            background-color: #f8f9fa;
+        }
+        .header-bg {
+            background-color: #007bff;
+            color: #fff;
+        }
+        .card-service {
+            border-radius: 1rem;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            transition: transform 0.2s;
+            cursor: pointer;
+        }
+        .card-service:hover {
+            transform: translateY(-5px);
+        }
+        .card-service .card-body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+        }
+        .card-service .icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            color: #007bff;
+        }
+        .card-service h5 {
+            font-size: 1.1rem;
+            font-weight: bold;
+        }
+        .card-service p {
+            font-size: 0.9rem;
+            color: #6c757d;
+        }
+    </style>
+</head>
+<body>
+
+     <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="#">S.G.D.C.H.</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    </ul>
+                <ul class="navbar-nav">
+                    <li class="nav-item">
+                        <a class="nav-link" href="modulotres.html">Voltar Geração de Documentos</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="index.html">Sair</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <header class="header-bg py-5 mb-4">
+        <div class="container text-center">
+            <h1>Sistema de Gestão de Documentos: Módulo Financeiro.</h1>
+        </div>
+    </header>
+
+    <main class="container mb-5">
+        <div class="row row-cols-1 row-cols-md-4 g-4">
+
+        
+         <div class="col">
+         <a href="boletos.html" class="card card-service h-100" style="text-decoration: none; color: inherit;">
+         <div class="card-body">
+            <i class="bi bi-upc-scan icon"></i>
+            <h5 class="card-title">Geração de Boletos</h5>
+            <p class="card-text">Gerar boletos para o pagamento de serviços médicos em uma única parcela</p>
+         </div>
+         </a>
+         </div>
+
+         <div class="col">
+         <a href="boletosdois.html" class="card card-service h-100" style="text-decoration: none; color: inherit;">
+         <div class="card-body">
+            <i class="bi bi-upc-scan icon"></i>
+            <h5 class="card-title">Geração de Boletos</h5>
+            <p class="card-text">Gerar boletos para o pagamento de serviços médicos em mais de uma parcela.</p>
+         </div>
+         </a>
+         </div>
+
+         <div class="col">
+         <a href="boletosvencidos.html" class="card card-service h-100" style="text-decoration: none; color: inherit;">
+         <div class="card-body">
+            <i class="bi bi-upc-scan icon"></i>
+            <h5 class="card-title">Geração de Boletos Vencidos</h5>
+            <p class="card-text">Gerar boletos com correções após o vencimento para o pagamento de serviços médicos.</p>
+         </div>
+         </a>
+         </div>    
+        
+        <div class="col">
+        <a href="orcamento.html" class="card card-service h-100" style="text-decoration: none; color: inherit;">
+         <div class="card-body">
+             <i class="bi bi-currency-dollar icon"></i>
+             <h5 class="card-title">Geração de Orçamento.</h5>
+             <p class="card-text">Gerar orçamento direitamente como médico especialista.</p>
+         </div>
+         </a>
+         </div>
+
+        <div class="col">
+        <a href="orcamentohospital.html" class="card card-service h-100" style="text-decoration: none; color: inherit;">
+         <div class="card-body">
+             <i class="bi bi-currency-dollar icon"></i>
+             <h5 class="card-title">Geração de Orçamento.</h5>
+             <p class="card-text">Gerar orçamento com a instituição médica.</p>
+         </div>
+         </a>
+         </div>
+            
+        <div class="col">
+        <a href="qrcode.html" class="card card-service h-100" style="text-decoration: none; color: inherit;">
+         <div class="card-body">
+               <i class="bi bi-qr-code icon"></i>
+             <h5 class="card-title">QR Code de Pagamento</h5>
+             <p class="card-text">Gerar QR Codes para pagamentos rápidos e seguros.</p>
+         </div>
+         </a>
+         </div>
+
+        </div>
+    </main>
+
+    <footer class="bg-light text-center py-3">
+        <div class="container">
+            <p class="mb-0 text-muted">Web programa desenvolvido por Juliano. 2025.</p>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

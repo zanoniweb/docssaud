@@ -1,0 +1,680 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SISTEMA DE GERAÇÃO DE DOCUMENTOS: Solicitação de Exames</title>
+
+    <!-- Adiciona as bibliotecas html2canvas e jsPDF para a geração do PDF -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js" defer></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" defer></script>
+
+    <style>
+        /* Reset básico e configurações globais */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            /* Cores principais */
+            --primary-color: #004080; /* Azul escuro para navbar */
+            --accent-color: #28a745; /* Verde para botões e títulos de documento */
+            --accent-dark-color: #1e7e34; /* Verde mais escuro para hover */
+            --text-color: #333;
+            --light-text-color: #555;
+            --background-color: #f4f4f4;
+            --container-bg-color: #fff;
+            --section-bg-color: #f9f9f9;
+            --border-color: #ccc;
+            --light-border-color: #ddd;
+
+            /* Fontes */
+            --font-family-main: 'Arial', sans-serif;
+            --font-family-document: 'Times New Roman', serif;
+
+            /* Tamanhos de fonte */
+            --font-size-base: 1rem; /* 16px */
+            --font-size-sm: 0.9rem; /* 14.4px */
+            --font-size-md: 1.1rem; /* 17.6px */
+            --font-size-lg: 1.6rem; /* 25.6px - para logo */
+            --font-size-xl: 2em; /* Para ícones */
+            --font-size-h1: 1.8rem; /* Para h1 do container */
+            --font-size-h2: 1.5rem; /* Para h2 do form-section */
+            --font-size-notification-title: 1.8rem; /* Para título do PDF */
+            --font-size-document-base: 12pt; /* Para texto do PDF */
+            --font-size-document-title: 16pt; /* Para título do PDF */
+
+            /* Espaçamentos */
+            --spacing-xs: 8px;
+            --spacing-sm: 10px;
+            --spacing-md: 15px;
+            --spacing-lg: 20px;
+            --spacing-xl: 30px;
+            --spacing-xxl: 40px;
+        }
+
+        /* Body e Layout Geral */
+        body {
+            font-family: var(--font-family-main);
+            line-height: 1.6;
+            margin: 0;
+            padding-top: 80px;
+            background-color: var(--background-color);
+            color: var(--text-color);
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        /* Container principal do formulário */
+        .container {
+            max-width: 800px;
+            width: 95%;
+            margin: var(--spacing-lg) auto;
+            padding: var(--spacing-xl);
+            background-color: var(--container-bg-color);
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            text-align: center;
+            color: var(--accent-dark-color);
+            margin-bottom: var(--spacing-xl);
+            font-size: var(--font-size-h1);
+        }
+
+        /* Seções do Formulário */
+        .form-section {
+            margin-bottom: var(--spacing-lg);
+            padding: var(--spacing-md);
+            border: 1px solid var(--light-border-color);
+            border-radius: 5px;
+            background-color: var(--section-bg-color);
+        }
+
+        .form-section h2 {
+            color: var(--accent-dark-color);
+            margin-top: 0;
+            margin-bottom: var(--spacing-md);
+            border-bottom: 2px solid #eee;
+            padding-bottom: var(--spacing-xs);
+            font-size: var(--font-size-h2);
+        }
+
+        label {
+            display: block;
+            margin-bottom: var(--spacing-xs);
+            font-weight: bold;
+            color: var(--light-text-color);
+            cursor: pointer;
+        }
+
+        input[type="text"],
+        input[type="email"],
+        input[type="date"],
+        input[type="tel"],
+        input[type="number"],
+        select,
+        textarea {
+            width: 100%;
+            padding: var(--spacing-sm);
+            margin-bottom: var(--spacing-md);
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            font-size: var(--font-size-base);
+            box-sizing: border-box;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
+        }
+
+        input[type="date"] {
+            padding: var(--spacing-sm) 10px;
+        }
+
+        input[type="text"]:focus,
+        input[type="email"]:focus,
+        input[type="date"]:focus,
+        input[type="tel"]:focus,
+        input[type="number"]:focus,
+        select:focus,
+        textarea:focus {
+            border-color: var(--accent-color);
+            outline: none;
+            box-shadow: 0 0 5px rgba(var(--accent-color), 0.25);
+            outline: 2px solid var(--accent-color);
+            outline-offset: 2px;
+        }
+
+        select {
+            padding-right: var(--spacing-xl);
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%23333' viewBox='0 0 16 16'%3E%3Cpath fill-rule='evenodd' d='M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 10px center;
+            background-size: 16px;
+        }
+        
+        textarea {
+            resize: vertical;
+        }
+
+        button {
+            display: block;
+            width: 100%;
+            padding: var(--spacing-md);
+            background-color: var(--accent-color);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: var(--font-size-md);
+            cursor: pointer;
+            transition: background-color 0.3s ease, transform 0.1s ease;
+            margin-top: var(--spacing-lg);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        button:hover {
+            background-color: var(--accent-dark-color);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+        }
+
+        button:active {
+            transform: translateY(0);
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+        }
+
+        hr {
+            border: 0;
+            height: 1px;
+            background-image: linear-gradient(to right, rgba(0, 0, 0, 0), rgba(0, 0, 0, 0.75), rgba(0, 0, 0, 0));
+            margin: var(--spacing-xl) 0;
+        }
+
+        /* Estilos do Menu de Navegação */
+        .navbar {
+            background-color: var(--primary-color);
+            color: white;
+            padding: var(--spacing-lg) var(--spacing-xl);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            z-index: 1000;
+        }
+
+        .logo p {
+            color: white;
+            font-size: var(--font-size-lg);
+            font-weight: bold;
+        }
+
+        .menu ul {
+            list-style: none;
+            display: flex;
+            gap: 50px;
+        }
+
+        .menu ul li a {
+            color: white;
+            text-decoration: none;
+            font-size: var(--font-size-md);
+            transition: color 0.3s, background-color 0.3s;
+            padding: var(--spacing-xs) 0;
+            display: block;
+        }
+
+        .menu ul li a:hover,
+        .menu ul li a:focus {
+            color: #ffd700;
+            outline: none;
+        }
+
+        .menu-icon {
+            font-size: var(--font-size-xl);
+            display: none;
+            cursor: pointer;
+            color: white;
+            outline: 2px solid transparent;
+            outline-offset: 4px;
+            transition: outline-color 0.3s ease;
+        }
+        .menu-icon:focus {
+            outline-color: #ffd700;
+        }
+
+        .menu-toggle {
+            display: none;
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding-top: 65px;
+            }
+            .navbar {
+                padding: var(--spacing-md) var(--spacing-lg);
+            }
+            .logo p {
+                font-size: 1.4em;
+            }
+            .menu ul {
+                flex-direction: column;
+                position: absolute;
+                top: 65px;
+                left: 0;
+                background-color: var(--primary-color);
+                width: 100%;
+                display: none;
+                box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+                gap: 0;
+                max-height: calc(100vh - 65px);
+                overflow-y: auto;
+            }
+            .menu ul li {
+                padding: var(--spacing-md) var(--spacing-xl);
+                border-top: 1px solid rgba(255, 255, 255, 0.2);
+            }
+            .menu ul li:first-child {
+                border-top: none;
+            }
+            .menu-icon {
+                display: block;
+            }
+            .menu-toggle:checked + .menu-icon + .menu ul {
+                display: flex;
+            }
+            .container {
+                padding: var(--spacing-lg);
+                margin: var(--spacing-lg) auto;
+            }
+            h1 {
+                font-size: 1.5rem;
+                margin-bottom: var(--spacing-lg);
+            }
+            .form-section h2 {
+                font-size: 1.3rem;
+                margin-bottom: var(--spacing-md);
+            }
+            input[type="text"],
+            input[type="email"],
+            input[type="date"],
+            input[type="tel"],
+            input[type="number"],
+            select,
+            textarea {
+                font-size: var(--font-size-base);
+                padding: var(--spacing-sm);
+            }
+            button {
+                font-size: var(--font-size-base);
+                padding: var(--spacing-sm);
+            }
+        }
+
+        @media (max-width: 480px) {
+            .navbar {
+                padding: var(--spacing-sm) var(--spacing-md);
+            }
+            .logo p {
+                font-size: 1.2em;
+            }
+            .menu ul {
+                top: 55px;
+                max-height: calc(100vh - 55px);
+            }
+            .menu ul li {
+                padding: var(--spacing-md) var(--spacing-lg);
+            }
+            .container {
+                padding: var(--spacing-md);
+                margin: var(--spacing-lg) auto;
+            }
+            h1 {
+                font-size: 1.3rem;
+            }
+            .form-section h2 {
+                font-size: 1.2rem;
+            }
+        }
+
+        /* Estilos para o modelo da Solicitação (inicialmente oculto - para o PDF) */
+        .exam-request-template {
+            display: none;
+            padding: 50px;
+            box-sizing: border-box;
+            width: 210mm;
+            min-height: 297mm;
+            background-color: var(--container-bg-color);
+            font-family: var(--font-family-document);
+            font-size: var(--font-size-document-base);
+            position: relative;
+            color: var(--text-color);
+            line-height: 1.5;
+        }
+
+        .certificate-header {
+            text-align: center;
+            padding-bottom: 10px;
+            border-bottom: 1px solid var(--light-border-color);
+            margin-bottom: 30px;
+        }
+        .certificate-header p {
+            margin: 0;
+            line-height: 1.2;
+        }
+        .certificate-header strong {
+            font-size: var(--font-size-document-title);
+        }
+
+        .certificate-title {
+            text-align: center;
+            margin-top: 20px;
+            margin-bottom: 30px;
+            font-size: var(--font-size-document-title);
+            text-transform: uppercase;
+            font-weight: bold;
+            color: var(--accent-color);
+        }
+
+        .certificate-date {
+            text-align: right;
+            margin-bottom: 20px;
+        }
+
+        .certificate-body {
+            margin-bottom: 20px;
+            text-align: justify;
+        }
+        
+        .exam-list {
+            margin-top: 20px;
+            white-space: pre-wrap; /* Preserva quebras de linha e espaços do textarea */
+            text-align: left;
+            padding: 10px;
+            border: 1px dashed var(--light-border-color);
+            background-color: var(--section-bg-color);
+        }
+
+        .signature-line {
+            text-align: center;
+            margin-top: 50px;
+            margin-bottom: 5px;
+        }
+        .signature-line-text {
+            font-size: var(--font-size-base);
+            font-weight: bold;
+        }
+        
+        .certificate-footer {
+            text-align: center;
+            padding-top: 10px;
+            border-top: 1px solid var(--light-border-color);
+            margin-top: 50px;
+        }
+        .certificate-footer p {
+            margin: 0;
+            line-height: 1.2;
+        }
+
+        .text-centered {
+            text-align: center;
+        }
+    </style>
+</head>
+
+<body>
+    <header class="navbar">
+        <div class="logo">
+            <p>S. G. D. C. & H.</p>
+        </div>
+
+        <input type="checkbox" id="menu-toggle" class="menu-toggle">
+        <label for="menu-toggle" class="menu-icon" aria-label="Abrir Menu">&#9776;</label>
+
+        <nav class="menu">
+        <ul>
+            <li><a href="geracaodocumentosmedicos.html">Voltar Geração de Documentos</a></li>
+            <li><a href="index.html">Sair</a></li>
+        </ul>
+    </nav>
+    </header>
+
+    <div class="container">
+        <h1>Gerador de Solicitação de Exames</h1>
+
+        <div class="form-section">
+            <h2>Dados da Clínica ou Hospital</h2>
+            <label for="clinicNome">Nome da Clínica/Hospital:</label>
+            <input type="text" id="clinicNome" placeholder="Ex: Hospital Central" required>
+
+            <label for="clinicCNPJ">CNPJ:</label>
+            <input type="text" id="clinicCNPJ" placeholder="Ex: 00.000.000/0001-00">
+            
+            <label for="cidadeEstado">Cidade e Estado (Emissão da Solicitação):</label>
+            <input type="text" id="cidadeEstado" placeholder="Ex: Londrina/PR" required>
+
+            <label for="clinicEndereco">Endereço:</label>
+            <input type="text" id="clinicEndereco" placeholder="Ex: Av. Principal, 1000, Bairro Novo" required>
+
+            <label for="clinicTelefone">Telefone:</label>
+            <input type="tel" id="clinicTelefone" placeholder="Ex: (43) 9999-8888">
+        </div>
+
+        <hr>
+
+        <div class="form-section">
+            <h2>Dados do Médico(a)</h2>
+            <label for="medicoNome">Nome Completo do Médico(a):</label>
+            <input type="text" id="medicoNome" placeholder="Ex: Dr. João da Silva" required>
+
+            <label for="medicoCRM">CRM / Outro Registro:</label>
+            <input type="text" id="medicoCRM" placeholder="Ex: CRM/SP 123456" required>
+
+            <label for="medicoEspecialidade">Especialidade (Opcional):</label>
+            <select id="medicoEspecialidade">
+            <option value="">Selecione uma especialidade</option>
+            <option value="Alergologia">Alergologia</option>
+            <option value="Angiologia">Angiologia</option>
+            <option value="Cardiologia">Cardiologia</option>
+            <option value="Cirurgia Geral">Cirurgia Geral</option>
+            <option value="Clínica Médica">Clínica Médica</option>
+            <option value="Dermatologia">Dermatologia</option>
+            <option value="Endocrinologia">Endocrinologia</option>
+            <option value="Gastroenterologia">Gastroenterologia</option>
+            <option value="Geriatria">Geriatria</option>
+            <option value="Ginecologia e Obstetrícia">Ginecologia e Obstetrícia</option>
+            <option value="Hematologia">Hematologia</option>
+            <option value="Infectologia">Infectologia</option>
+            <option value="Nefrologia">Nefrologia</option>
+            <option value="Neurologia">Neurologia</option>
+            <option value="Oftalmologia">Oftalmologia</option>
+            <option value="Ortopedia e Traumatologia">Ortopedia e Traumatologia</option>
+            <option value="Otorrinolaringologia">Otorrinolaringologia</option>
+            <option value="Pediatria">Pediatria</option>
+            <option value="Pneumologia">Pneumologia</option>
+            <option value="Psiquiatria">Psiquiatria</option>
+            <option value="Reumatologia">Reumatologia</option>
+            <option value="Urologia">Urologia</option>
+            </select>
+        </div>
+
+        <hr>
+
+        <div class="form-section">
+            <h2>Dados do Paciente</h2>
+            <label for="pacienteNome">Nome Completo do Paciente:</label>
+            <input type="text" id="pacienteNome" placeholder="Ex: Maria Souza" required>
+
+            <label for="pacienteCPF">CPF do Paciente:</label>
+            <input type="text" id="pacienteCPF" placeholder="Ex: 123.456.789-00" required>
+        </div>
+
+        <hr>
+
+        <div class="form-section">
+            <h2>Exames Solicitados</h2>
+            <label for="listaExames">Lista de Exames (um por linha):</label>
+            <textarea id="listaExames" rows="8" placeholder="Ex:&#10;- Hemograma completo&#10;- Glicemia de jejum&#10;- Ultrassom abdominal&#10;- Ressonância magnética do joelho"></textarea>
+            
+            <label for="dataSolicitacao">Data da Solicitação:</label>
+            <input type="date" id="dataSolicitacao" required>
+        </div>
+
+        <button onclick="generatePDF()">Gerar Solicitação de Exames em PDF</button>
+    </div>
+
+    <!-- Oculta o template de solicitação de exames. Ele será exibido apenas durante a captura para o PDF. -->
+    <div id="exam-request-template" class="exam-request-template">
+        <div class="certificate-header">
+            <p><strong id="pdfClinicNome"></strong></p>
+            <p id="pdfClinicEndereco"></p>
+            <p>CNPJ: <span id="pdfClinicCNPJ"></span> | Tel: <span id="pdfClinicTelefone"></span></p>
+        </div>
+
+        <h2 class="certificate-title">SOLICITAÇÃO DE EXAMES</h2>
+
+        <p class="certificate-date" id="pdfDataSolicitacaoCidade"></p>
+
+        <div class="certificate-body">
+            <p><strong>Paciente:</strong> <span id="pdfPacienteNome"></span></p>
+            <p><strong>CPF:</strong> <span id="pdfPacienteCPF"></span></p>
+            <br>
+            <p>Solicito os exames abaixo listados para o(a) paciente acima identificado(a):</p>
+            <pre class="exam-list" id="pdfListaExames"></pre>
+        </div>
+        
+        <br>
+        <br>
+        <br>
+        <div class="signature-line">
+            <p>__________________________________________</p>
+            <p class="signature-line-text"><strong><span id="pdfMedicoNomeAssinatura"></span></strong></p>
+            <p><span id="pdfMedicoCRM"></span></p>
+            <p><span id="pdfMedicoEspecialidade"></span></p>
+        </div>
+    </div>
+
+    <script>
+        // Função para formatar a data (dd de [mês] de aaaa)
+        function formatarDataExtenso(dataString) {
+            if (!dataString) return '';
+            const date = new Date(dataString + 'T00:00:00');
+            const options = { day: 'numeric', month: 'long', year: 'numeric' };
+            return date.toLocaleDateString('pt-BR', options);
+        }
+
+        // Função para preencher a data atual no campo de data da solicitação
+        document.addEventListener('DOMContentLoaded', () => {
+            const today = new Date();
+            const year = today.getFullYear();
+            const month = String(today.getMonth() + 1).padStart(2, '0');
+            const day = String(today.getDate()).padStart(2, '0');
+            document.getElementById('dataSolicitacao').value = `${year}-${month}-${day}`;
+        });
+
+        // Função para exibir um modal de alerta customizado
+        function showCustomAlert(message) {
+            const modalHtml = `
+                <div id="custom-alert-modal" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.5); display: flex; justify-content: center; align-items: center; z-index: 9999;">
+                    <div style="background: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); max-width: 400px; text-align: center;">
+                        <p style="font-size: 1.2rem; margin-bottom: 20px;">${message}</p>
+                        <button onclick="document.getElementById('custom-alert-modal').remove()" style="background-color: var(--accent-color); color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer;">OK</button>
+                    </div>
+                </div>
+            `;
+            document.body.insertAdjacentHTML('beforeend', modalHtml);
+        }
+
+        async function generatePDF() {
+            // 1. Coletar dados do formulário
+            const clinicNome = document.getElementById('clinicNome').value;
+            const clinicCNPJ = document.getElementById('clinicCNPJ').value;
+            const cidadeEstado = document.getElementById('cidadeEstado').value;
+            const clinicEndereco = document.getElementById('clinicEndereco').value;
+            const clinicTelefone = document.getElementById('clinicTelefone').value;
+
+            const medicoNome = document.getElementById('medicoNome').value;
+            const medicoCRM = document.getElementById('medicoCRM').value;
+            const medicoEspecialidade = document.getElementById('medicoEspecialidade').value;
+
+            const pacienteNome = document.getElementById('pacienteNome').value;
+            const pacienteCPF = document.getElementById('pacienteCPF').value;
+            
+            const listaExames = document.getElementById('listaExames').value;
+            const dataSolicitacao = document.getElementById('dataSolicitacao').value;
+
+            // Validação simples
+            if (!clinicNome || !medicoNome || !medicoCRM || !pacienteNome || !pacienteCPF || !dataSolicitacao || !cidadeEstado || !listaExames) {
+                showCustomAlert("Por favor, preencha todos os campos obrigatórios.");
+                return;
+            }
+
+            // 2. Preencher o modelo de solicitação oculto
+            document.getElementById('pdfClinicNome').textContent = clinicNome;
+            document.getElementById('pdfClinicEndereco').textContent = clinicEndereco;
+            document.getElementById('pdfClinicCNPJ').textContent = clinicCNPJ;
+            document.getElementById('pdfClinicTelefone').textContent = clinicTelefone;
+
+            document.getElementById('pdfMedicoNomeAssinatura').textContent = medicoNome;
+            document.getElementById('pdfMedicoCRM').textContent = medicoCRM;
+            document.getElementById('pdfMedicoEspecialidade').textContent = medicoEspecialidade ? medicoEspecialidade : '';
+
+            document.getElementById('pdfPacienteNome').textContent = pacienteNome;
+            document.getElementById('pdfPacienteCPF').textContent = pacienteCPF;
+
+            const dataSolicitacaoFormatada = formatarDataExtenso(dataSolicitacao);
+            document.getElementById('pdfDataSolicitacaoCidade').textContent = `${cidadeEstado}, ${dataSolicitacaoFormatada}.`;
+            
+            document.getElementById('pdfListaExames').textContent = listaExames;
+
+            // 3. Gerar o PDF
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF('p', 'mm', 'a4');
+            const element = document.getElementById('exam-request-template');
+
+            // Torna o template visível para a captura, mas mantém fora do layout principal
+            element.style.display = 'block';
+
+            try {
+                const canvas = await html2canvas(element, {
+                    scale: 2,
+                    useCORS: true,
+                    logging: true
+                });
+
+                const imgData = canvas.toDataURL('image/png');
+                const imgWidth = 210;
+                const pageHeight = 297;
+                const imgHeight = canvas.height * imgWidth / canvas.width;
+                let heightLeft = imgHeight;
+                let position = 0;
+
+                doc.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+                heightLeft -= pageHeight;
+
+                while (heightLeft >= 0) {
+                    position = heightLeft - imgHeight;
+                    doc.addPage();
+                    doc.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+                    heightLeft -= pageHeight;
+                }
+
+                doc.save('Solicitacao_Exames.pdf');
+
+            } catch (error) {
+                console.error("Erro ao gerar o PDF:", error);
+                showCustomAlert("Ocorreu um erro ao gerar o PDF. Por favor, tente novamente.");
+            } finally {
+                // Oculta o template novamente após a geração
+                element.style.display = 'none';
+            }
+        }
+    </script>
+</body>
+</html>

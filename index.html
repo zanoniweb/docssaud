@@ -1,0 +1,699 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SISTEMA DE GESTÃO: CLÍNICAS & HOSPITAIS</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+    <style>
+        /* Base e Fontes */
+        body {
+            font-family: 'Montserrat', sans-serif;
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            color: #333;
+            overflow-x: hidden;
+            background-color: #f5f7fa;
+        }
+
+        /* Cores de destaque para facilidade de mudança */
+        :root {
+            --primary-blue: #00796b; /* Verde-água mais claro para área da saúde */
+            --dark-blue: #004d40;
+            --accent-green: #38761d;
+            --light-bg: #f5f7fa;
+            --dark-bg: #1a1a1a;
+            --text-color-dark: #2c3e50;
+        }
+
+        /* Menu de Navegação Superior - AJUSTADO */
+        .menu {
+            position: absolute;
+            top: 30px;
+            left: 50%;
+            transform: translateX(-50%); /* Centraliza o menu horizontalmente */
+            z-index: 100;
+        }
+
+        .menu ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            display: flex; /* Garante que os itens fiquem em linha */
+            justify-content: center; /* Centraliza os itens dentro do ul */
+            gap: 20px; /* Adiciona espaçamento entre os botões */
+        }
+
+        .menu a {
+            color: #fff;
+            text-decoration: none;
+            font-size: 1.1em;
+            font-weight: 700;
+            padding: 10px 20px;
+            border-radius: 50px;
+            background: linear-gradient(45deg, var(--primary-blue), #00a896);
+            box-shadow: 0 4px 10px rgba(0, 121, 107, 0.4);
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .menu a:hover {
+            background: linear-gradient(45deg, #00a896, var(--primary-blue));
+            box-shadow: 0 6px 15px rgba(0, 121, 107, 0.6);
+            transform: translateY(-2px);
+        }
+
+        /* Seção Hero - Destaque Principal */
+        .hero-section {
+            background: url('https://images.unsplash.com/photo-1576091160550-21735c269220?q=80&w=2940&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D') no-repeat center center/cover;
+            color: #fff;
+            text-align: center;
+            padding: 180px 20px 100px;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column; /* Alinha o menu e o conteúdo verticalmente */
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero-section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(to bottom right, rgba(0, 77, 64, 0.8), rgba(0, 121, 107, 0.7));
+            z-index: 1;
+        }
+
+        .hero-content {
+            position: relative;
+            z-index: 2;
+            max-width: 900px;
+            animation: fadeInScale 1.2s ease-out;
+            margin-top: 50px; /* Adiciona espaço entre o menu e o conteúdo hero */
+        }
+
+        .hero-content h1 {
+            font-size: 4.5em;
+            margin-bottom: 20px;
+            text-shadow: 3px 3px 8px rgba(0, 0, 0, 0.7);
+            line-height: 1.1;
+            font-weight: 800;
+        }
+
+        .hero-content p {
+            font-size: 1.8em;
+            text-shadow: 2px 2px 5px rgba(0, 0, 0, 0.6);
+            margin: 0 auto 40px auto;
+            font-weight: 400;
+        }
+
+        .hero-button {
+            background: linear-gradient(90deg, #4CAF50, var(--accent-green));
+            color: #fff;
+            padding: 18px 40px;
+            border-radius: 50px;
+            text-decoration: none;
+            font-size: 1.4em;
+            font-weight: 700;
+            box-shadow: 0 6px 15px rgba(56, 118, 29, 0.5);
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .hero-button:hover {
+            background: linear-gradient(90deg, var(--accent-green), #4CAF50);
+            transform: translateY(-5px) scale(1.02);
+            box-shadow: 0 10px 20px rgba(56, 118, 29, 0.7);
+        }
+
+        @keyframes fadeInScale {
+            from { opacity: 0; transform: scale(0.9) translateY(30px); }
+            to { opacity: 1; transform: scale(1) translateY(0); }
+        }
+
+        /* Seção de Recursos */
+        .services-section {
+            padding: 100px 20px;
+            text-align: center;
+            background-color: var(--light-bg);
+            position: relative;
+        }
+
+        .services-section h2 {
+            font-size: 3.5em;
+            margin-bottom: 60px;
+            color: var(--dark-blue);
+            font-weight: 800;
+            position: relative;
+            padding-bottom: 20px;
+        }
+
+        .services-section h2::after {
+            content: '';
+            position: absolute;
+            left: 50%;
+            bottom: 0;
+            transform: translateX(-50%);
+            width: 120px;
+            height: 6px;
+            background: linear-gradient(90deg, var(--primary-blue), #00a896);
+            border-radius: 3px;
+        }
+
+        .services-container {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 45px;
+        }
+
+        .service-card {
+            background-color: #fff;
+            border-radius: 15px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            padding: 40px;
+            width: 320px;
+            text-align: center;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+            align-items: center;
+            border-bottom: 5px solid transparent;
+            background-clip: padding-box;
+        }
+
+        .service-card:hover {
+            transform: translateY(-15px) scale(1.03);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
+            border-image: linear-gradient(to right, var(--primary-blue), #00a896) 1;
+        }
+
+        .service-card i {
+            font-size: 4em;
+            color: var(--primary-blue);
+            margin-bottom: 30px;
+            transition: transform 0.3s ease;
+        }
+
+        .service-card:hover i {
+            transform: scale(1.1);
+            color: var(--dark-blue);
+        }
+
+        .service-card h3 {
+            font-size: 2.2em;
+            color: var(--text-color-dark);
+            margin-bottom: 20px;
+            font-weight: 700;
+        }
+
+        .service-card p {
+            font-size: 1.2em;
+            color: #666;
+            line-height: 1.8;
+            flex-grow: 1;
+        }
+
+        /* Boxes de Detalhe dos Serviços */
+        .service-detail-box {
+            background-color: #fff;
+            border-radius: 15px;
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.3);
+            padding: 60px;
+            max-width: 900px;
+            margin: 80px auto 40px auto;
+            text-align: left;
+            display: none;
+            animation: fadeInExpand 0.7s ease-out;
+            border-left: 8px solid;
+            border-image: linear-gradient(to bottom, var(--primary-blue), #00a896) 1;
+            position: relative;
+        }
+
+        @keyframes fadeInExpand {
+            from { opacity: 0; transform: translateY(50px) scale(0.95); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        .service-detail-box h4 {
+            font-size: 2.8em;
+            color: var(--dark-blue);
+            margin-bottom: 30px;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .service-detail-box h4 i {
+            font-size: 1.2em;
+            color: var(--primary-blue);
+        }
+
+        .service-detail-box p {
+            font-size: 1.3em;
+            line-height: 2;
+            color: #444;
+            margin-bottom: 40px;
+        }
+
+        .service-detail-box .close-detail-box {
+            background: linear-gradient(90deg, #dc3545, #e65c5c);
+            color: #fff;
+            border: none;
+            padding: 16px 35px;
+            border-radius: 50px;
+            cursor: pointer;
+            font-size: 1.2em;
+            font-weight: 700;
+            transition: all 0.3s ease;
+            display: block;
+            margin: 0 auto;
+            box-shadow: 0 4px 10px rgba(220, 53, 69, 0.4);
+        }
+
+        .service-detail-box .close-detail-box:hover {
+            background: linear-gradient(90deg, #e65c5c, #dc3545);
+            transform: translateY(-3px) scale(1.02);
+            box-shadow: 0 6px 15px rgba(220, 53, 69, 0.6);
+        }
+
+        /* Rodapé */
+        footer {
+            background-color: var(--dark-bg);
+            color: #f0f0f0;
+            padding: 60px 20px;
+            text-align: center;
+            font-size: 1.1em;
+            border-top: 5px solid var(--primary-blue);
+        }
+
+        .footer-content {
+            display: flex;
+            justify-content: space-around;
+            flex-wrap: wrap;
+            gap: 50px;
+            margin-bottom: 50px;
+        }
+
+        .contact-info, .location-info {
+            flex: 1;
+            min-width: 320px;
+            text-align: left;
+            padding: 20px;
+            background-color: #2a2a2a;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        .footer-content h3 {
+            color: #00a896;
+            margin-bottom: 25px;
+            font-size: 1.8em;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .footer-content h3 i {
+            font-size: 1.1em;
+        }
+
+        .footer-content p {
+            margin: 12px 0;
+            line-height: 1.9;
+            color: #d0d0d0;
+        }
+        
+        .footer-content p a {
+            color: #00a896;
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+        .footer-content p a:hover {
+            color: #fff;
+            text-decoration: underline;
+        }
+
+        .copyright {
+            border-top: 1px solid #444;
+            padding-top: 30px;
+            margin-top: 30px;
+            text-align: center;
+            font-size: 1em;
+            color: #b0b0b0;
+        }
+
+        .copyright img {
+            vertical-align: middle;
+            margin-left: 10px;
+            height: 30px;
+            filter: grayscale(100%) brightness(150%);
+        }
+
+        /* Media Queries para Responsividade */
+        @media (max-width: 992px) {
+            .hero-content h1 {
+                font-size: 3.5em;
+            }
+            .hero-content p {
+                font-size: 1.5em;
+            }
+            .services-section h2 {
+                font-size: 2.8em;
+            }
+            .service-card {
+                width: 48%;
+                padding: 30px;
+            }
+            .service-card h3 {
+                font-size: 1.8em;
+            }
+            .service-card i {
+                font-size: 3.2em;
+            }
+            .service-detail-box {
+                padding: 40px;
+                max-width: 700px;
+            }
+            .service-detail-box h4 {
+                font-size: 2.2em;
+            }
+            .service-detail-box p {
+                font-size: 1.1em;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .menu {
+                position: static;
+                transform: none;
+                margin-bottom: 30px;
+            }
+            .menu ul {
+                flex-direction: column; /* Empilha os botões em telas menores */
+                align-items: center;
+            }
+            .menu li {
+                margin: 10px 0;
+            }
+            .menu a {
+                padding: 12px 20px;
+                font-size: 1em;
+            }
+            .hero-section {
+                padding: 120px 20px 80px;
+            }
+            .hero-content h1 {
+                font-size: 2.8em;
+            }
+            .hero-content p {
+                font-size: 1.3em;
+            }
+            .hero-button {
+                padding: 14px 30px;
+                font-size: 1.2em;
+            }
+            .services-section h2 {
+                font-size: 2.2em;
+            }
+            .services-container {
+                flex-direction: column;
+                align-items: center;
+            }
+            .service-card {
+                width: 90%;
+                max-width: 380px;
+                padding: 30px;
+            }
+            .service-card i {
+                font-size: 3em;
+            }
+            .service-card h3 {
+                font-size: 1.6em;
+            }
+            .service-detail-box {
+                padding: 30px;
+            }
+            .service-detail-box h4 {
+                font-size: 1.8em;
+            }
+            .service-detail-box p {
+                font-size: 1em;
+            }
+            .footer-content {
+                flex-direction: column;
+                align-items: center;
+            }
+            .contact-info, .location-info {
+                text-align: center;
+                min-width: unset;
+                width: 90%;
+                margin-bottom: 20px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .hero-content h1 {
+                font-size: 2.2em;
+            }
+            .hero-content p {
+                font-size: 1.1em;
+            }
+            .hero-button {
+                padding: 10px 20px;
+                font-size: 1em;
+            }
+            .services-section h2 {
+                font-size: 1.8em;
+            }
+            .service-card {
+                padding: 25px;
+            }
+            .service-card h3 {
+                font-size: 1.4em;
+            }
+            .service-card i {
+                font-size: 2.5em;
+            }
+            .service-detail-box {
+                padding: 20px;
+            }
+            .service-detail-box h4 {
+                font-size: 1.5em;
+            }
+            .service-detail-box p {
+                font-size: 0.95em;
+            }
+            .footer-content h3 {
+                font-size: 1.4em;
+            }
+            .footer-content p {
+                font-size: 0.9em;
+            }
+            .copyright img {
+                height: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <header class="hero-section">
+        <nav class="menu">
+            <ul>
+                <li><a href="modulotres.html"><i class="fas fa-arrow-right-to-bracket"></i> Acessar Sistema</a></li>
+                <li><a href="segunda.html"><i class="fas fa-arrow-right-to-bracket"></i> Valide Assinaturas Digitais de Documentos</a></li>
+            </ul>
+        </nav>
+        <div class="hero-content">
+            <h1>Sistema de Gestão de Documentos: Clínicas & Hospitais</h1>
+            <p>Otimize sua rotina administrativa e clínica de geração de documentos. Emita documentos de forma ilimitada em "pdf" de forma rápida e prática sem a necessidade de fazer ajustes em editores de textos ou outros aplicativos.</p>
+            <a href="#resources-section" class="hero-button"><i class="fas fa-notes-medical"></i> Otimize sua Gestão Agora</a>
+        </div>
+    </header>
+
+
+    <main>
+        <section id="resources-section" class="services-section">
+            <h2>Documentos e Serviços Médicos ao seu Alcance</h2>
+            <div class="services-container">
+
+                <div class="service-card" data-service="assinatura-digital">
+                    <i class="fas fa-signature"></i>
+                    <h3>Assinaturas Digitais</h3>
+                    <p>Crie e gerencie assinaturas digitais com validade jurídica para todos os seus documentos.</p>
+                </div>
+                <div class="service-card" data-service="cadastro-paciente">
+                    <i class="fas fa-user-plus"></i>
+                    <h3>Cadastro do Paciente</h3>
+                    <p>Registreas  informações de pacientes de forma centralizada e segura.</p>
+                </div>
+
+                <div class="service-card" data-service="emissao-receitas">
+                    <i class="fas fa-prescription-bottle-alt"></i>
+                    <h3>Emissão de Receitas</h3>
+                    <p>Crie e imprima receitas médicas de maneira padronizada, com informações detalhadas e seguras para o paciente.</p>
+                </div>
+
+                <div class="service-card" data-service="emissao-atestados">
+                    <i class="fas fa-file-medical"></i>
+                    <h3>Emissão de Atestados</h3>
+                    <p>Gere atestados médicos de forma rápida e oficial, com modelos prontos para preenchimento.</p>
+                </div>
+
+                <div class="service-card" data-service="solicitacao-exames">
+                    <i class="fas fa-x-ray"></i>
+                    <h3>Solicitação de Exames</h3>
+                    <p>Automatize a solicitação de exames, com formulários digitais para facilitar as rotinas clínicas.</p>
+                </div>
+
+                <div class="service-card" data-service="contrato-servicos">
+                    <i class="fas fa-file-contract"></i>
+                    <h3>Contrato de Serviços Médicos</h3>
+                    <p>Elabore contratos para prestação de serviços, com cláusulas pré-definidas para garantir a segurança jurídica.</p>
+                </div>
+
+                <div class="service-card" data-service="geracao-boletos">
+                    <i class="fas fa-barcode"></i>
+                    <h3>Geração de Boletos</h3>
+                    <p>Simplifique a cobrança de serviços com a emissão automática de boletos.</p>
+                </div>
+
+                <div class="service-card" data-service="termos-declaracoes">
+                    <i class="fas fa-file-signature"></i>
+                    <h3>Termos e Declarações</h3>
+                    <p>Crie termos de consentimento, responsabilidade e outras declarações essenciais para a gestão médica.</p>
+                </div>
+
+                <div class="service-card" data-service="qr-code-pagamento">
+                    <i class="fas fa-qrcode"></i>
+                    <h3>QR Code de Pagamento</h3>
+                    <p>Facilite a vida dos seus pacientes com a geração de QR Codes para pagamentos, uma solução moderna e ágil.</p>
+                </div>
+            </div>
+
+            <div id="detail-box-assinatura-digital" class="service-detail-box">
+                <h4><i class="fas fa-signature"></i> Assinaturas Digitais</h4>
+                <p>O sistema possibilita a criação e gestão de **Assinaturas Digitais** com validade jurídica. Os documentos eletrônicos podem ser assinados diretamente na plataforma, garantindo a **autenticidade e integridade** do conteúdo. As assinaturas geradas são facilmente **validadas** dentro deste web site, oferecendo um processo de documentação moderno, seguro e totalmente digital.</p>
+                <button class="close-detail-box">Fechar Detalhes</button>
+            </div>
+            <div id="detail-box-cadastro-paciente" class="service-detail-box">
+                <h4><i class="fas fa-user-plus"></i> Cadastro do Paciente</h4>
+                <p>O **Cadastro do Paciente** é o primeiro passo para uma gestão eficiente. Com ele, você pode armazenar de forma segura todas as informações essenciais, como dados pessoais, histórico de saúde e contatos de emergência. A organização centralizada permite um acesso rápido e fácil, crucial para um atendimento ágil e de qualidade. Este recurso é a base para a criação de prontuários eletrônicos e o acompanhamento completo do paciente.</p>
+                <button class="close-detail-box">Fechar Detalhes</button>
+            </div>
+
+            <div id="detail-box-emissao-receitas" class="service-detail-box">
+                <h4><i class="fas fa-prescription-bottle-alt"></i> Emissão de Receitas</h4>
+                <p>Com a funcionalidade de **Emissão de Receitas**, é possível gerar documentos médicos de forma rápida e padronizada. O sistema oferece modelos prontos para preenchimento, garantindo que todas as informações, como a dosagem e o modo de uso, sejam claras e precisas. Isso reduz o risco de erros de medicação e melhora a experiência do paciente, que recebe um documento legível e profissional.</p>
+                <button class="close-detail-box">Fechar Detalhes</button>
+            </div>
+
+            <div id="detail-box-emissao-atestados" class="service-detail-box">
+                <h4><i class="fas fa-file-medical"></i> Emissão de Atestados</h4>
+                <p>A **Emissão de Atestados** é um recurso indispensável para clínicas e hospitais. Ele permite a criação de atestados de forma ágil e segura, com informações como o período de afastamento e o motivo da consulta. A ferramenta garante que a documentação seja oficial e esteja de acordo com as normas médicas, facilitando o processo para o paciente e para a gestão administrativa.</p>
+                <button class="close-detail-box">Fechar Detalhes</button>
+            </div>
+
+            <div id="detail-box-solicitacao-exames" class="service-detail-box">
+                <h4><i class="fas fa-x-ray"></i> Solicitação de Exames</h4>
+                <p>A **Solicitação de Exames** é um módulo que agiliza o fluxo de trabalho. Com ele, você pode gerar formulários para exames laboratoriais ou de imagem, enviar eletronicamente para o paciente ou laboratório e acompanhar o status dos resultados. A integração de dados minimiza a necessidade de papéis, otimiza o tempo da equipe e permite um diagnóstico mais rápido.</p>
+                <button class="close-detail-box">Fechar Detalhes</button>
+            </div>
+            
+            <div id="detail-box-contrato-servicos" class="service-detail-box">
+                <h4><i class="fas fa-file-contract"></i> Contrato de Serviços Médicos</h4>
+                <p>A ferramenta de **Contrato de Serviços Médicos** oferece modelos personalizáveis para formalizar a relação com pacientes, empresas e convênios. Você pode incluir cláusulas de pagamento, responsabilidades e procedimentos, garantindo transparência e segurança jurídica para todas as partes envolvidas na prestação de serviços de saúde.</p>
+                <button class="close-detail-box">Fechar Detalhes</button>
+            </div>
+
+            <div id="detail-box-geracao-boletos" class="service-detail-box">
+                <h4><i class="fas fa-barcode"></i> Geração de Boletos</h4>
+                <p>O módulo de **Geração de Boletos** simplifica a gestão financeira. Com ele, é possível emitir boletos para consultas, procedimentos e pacotes de serviços, com dados de vencimento e valores preenchidos automaticamente. Isso automatiza a cobrança e oferece uma forma de pagamento prática para os pacientes.</p>
+                <button class="close-detail-box">Fechar Detalhes</button>
+            </div>
+
+            <div id="detail-box-termos-declaracoes" class="service-detail-box">
+                <h4><i class="fas fa-file-signature"></i> Termos e Declarações</h4>
+                <p>Com o recurso de **Termos e Declarações**, você pode gerar documentos importantes como termos de consentimento informado, declarações de comparecimento e outros documentos legais. A formalização desses documentos é essencial para a conformidade legal e para a proteção tanto do paciente quanto da instituição.</p>
+                <button class="close-detail-box">Fechar Detalhes</button>
+            </div>
+
+            <div id="detail-box-qr-code-pagamento" class="service-detail-box">
+                <h4><i class="fas fa-qrcode"></i> QR Code de Pagamento</h4>
+                <p>A funcionalidade de **QR Code de Pagamento** integra a gestão financeira com a tecnologia moderna. Permite a geração de códigos QR para pagamentos instantâneos via PIX ou outros meios, oferecendo uma opção de pagamento ágil, segura e sem contato para os pacientes. Essa tecnologia melhora a experiência do cliente e otimiza a conciliação financeira.</p>
+                <button class="close-detail-box">Fechar Detalhes</button>
+            </div>
+
+        </section>
+    </main>
+
+    <footer>
+        <div class="footer-content">
+            <div class="contact-info">
+                <h3><i class="fas fa-phone-volume"></i> Contato</h3>
+                <p>E-mail: julianozanoni2014@gmail.com</p>
+                <p>Telefone: (43) 98863-5712</p>
+            </div>
+
+            </div>
+
+        <i>
+        <div class="copyright">
+            © 2025 Web Programa Sistema de Gestão Documentos: Clínicas & Hospitais. Todos os direitos reservados a Juliano <img src="https://d1yei2z3i6k35z.cloudfront.net/6946809/65e45ac72773e_zanoni.1.png" alt="Logo de Juliano Zanoni"></p>
+        </i>
+        </div>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const cards = document.querySelectorAll('.service-card');
+            const detailBoxes = document.querySelectorAll('.service-detail-box');
+            const closeButtons = document.querySelectorAll('.close-detail-box');
+
+            cards.forEach(card => {
+                card.addEventListener('click', () => {
+                    detailBoxes.forEach(box => {
+                        box.style.display = 'none';
+                    });
+
+                    // O serviceId corresponde ao data-service do card
+                    const serviceId = card.getAttribute('data-service');
+                    const detailBox = document.getElementById(`detail-box-${serviceId}`);
+                    
+                    if (detailBox) {
+                        detailBox.style.display = 'block';
+                        // Rola a tela para o box de detalhes
+                        detailBox.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    }
+                });
+            });
+
+            closeButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    const parentBox = button.closest('.service-detail-box');
+                    if (parentBox) {
+                        parentBox.style.display = 'none';
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>

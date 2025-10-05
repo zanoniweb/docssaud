@@ -1,0 +1,631 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SISTEMA DE GERAÇÃO DE DOCUMENTOS: Notificação de Acidente de Trabalho</title>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js" defer></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" defer></script>
+
+    <style>
+        /* Reset básico e configurações globais */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            /* Cores principais */
+            --primary-color: #004080;
+            --accent-color: #d9534f; /* Cor adaptada para alerta/notificação (vermelho) */
+            --accent-dark-color: #c9302c;
+            --text-color: #333;
+            --light-text-color: #555;
+            --background-color: #f4f4f4;
+            --container-bg-color: #fff;
+            --section-bg-color: #f9f9f9;
+            --border-color: #ccc;
+            --light-border-color: #ddd;
+
+            /* Fontes */
+            --font-family-main: 'Arial', sans-serif;
+            --font-family-document: 'Times New Roman', serif;
+
+            /* Tamanhos de fonte */
+            --font-size-base: 1rem;
+            --font-size-sm: 0.9rem;
+            --font-size-md: 1.1rem;
+            --font-size-lg: 1.6rem;
+            --font-size-xl: 2em;
+            --font-size-h1: 1.8rem;
+            --font-size-h2: 1.5rem;
+            --font-size-notification-title: 1.8rem;
+            --font-size-document-base: 12pt;
+            --font-size-document-title: 16pt;
+
+            /* Espaçamentos */
+            --spacing-xs: 8px;
+            --spacing-sm: 10px;
+            --spacing-md: 15px;
+            --spacing-lg: 20px;
+            --spacing-xl: 30px;
+            --spacing-xxl: 40px;
+        }
+
+        /* Body e Layout Geral */
+        body {
+            font-family: var(--font-family-main);
+            line-height: 1.6;
+            margin: 0;
+            padding-top: 80px;
+            background-color: var(--background-color);
+            color: var(--text-color);
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        /* Container principal do formulário */
+        .container {
+            max-width: 800px;
+            width: 95%;
+            margin: var(--spacing-lg) auto;
+            padding: var(--spacing-xl);
+            background-color: var(--container-bg-color);
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            text-align: center;
+            color: var(--accent-color);
+            margin-bottom: var(--spacing-xl);
+            font-size: var(--font-size-h1);
+        }
+
+        /* Seções do Formulário */
+        .form-section {
+            margin-bottom: var(--spacing-lg);
+            padding: var(--spacing-md);
+            border: 1px solid var(--light-border-color);
+            border-radius: 5px;
+            background-color: var(--section-bg-color);
+        }
+
+        .form-section h2 {
+            color: var(--accent-dark-color);
+            margin-top: 0;
+            margin-bottom: var(--spacing-md);
+            border-bottom: 2px solid #eee;
+            padding-bottom: var(--spacing-xs);
+            font-size: var(--font-size-h2);
+        }
+
+        label {
+            display: block;
+            margin-bottom: var(--spacing-xs);
+            font-weight: bold;
+            color: var(--light-text-color);
+            cursor: pointer;
+        }
+
+        input[type="text"],
+        input[type="date"],
+        input[type="time"],
+        select,
+        textarea {
+            width: 100%;
+            padding: var(--spacing-sm);
+            margin-bottom: var(--spacing-md);
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            font-size: var(--font-size-base);
+            box-sizing: border-box;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
+        }
+
+        input[type="text"]:focus,
+        input[type="date"]:focus,
+        input[type="time"]:focus,
+        select:focus,
+        textarea:focus {
+            border-color: var(--accent-color);
+            outline: none;
+            box-shadow: 0 0 5px rgba(var(--accent-color), 0.25);
+            outline: 2px solid var(--accent-color);
+            outline-offset: 2px;
+        }
+
+        select {
+            padding-right: var(--spacing-xl);
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%23333' viewBox='0 0 16 16'%3E%3Cpath fill-rule='evenodd' d='M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 10px center;
+            background-size: 16px;
+        }
+
+        button {
+            display: block;
+            width: 100%;
+            padding: var(--spacing-md);
+            background-color: var(--accent-color);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: var(--font-size-md);
+            cursor: pointer;
+            transition: background-color 0.3s ease, transform 0.1s ease;
+            margin-top: var(--spacing-lg);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        button:hover {
+            background-color: var(--accent-dark-color);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+        }
+
+        button:active {
+            transform: translateY(0);
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+        }
+
+        hr {
+            border: 0;
+            height: 1px;
+            background-image: linear-gradient(to right, rgba(0, 0, 0, 0), rgba(0, 0, 0, 0.75), rgba(0, 0, 0, 0));
+            margin: var(--spacing-xl) 0;
+        }
+
+        /* Estilos do Menu de Navegação (mantidos) */
+        .navbar {
+            background-color: var(--primary-color);
+            color: white;
+            padding: var(--spacing-lg) var(--spacing-xl);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            z-index: 1000;
+        }
+
+        .logo p {
+            color: white;
+            font-size: var(--font-size-lg);
+            font-weight: bold;
+        }
+
+        .menu ul {
+            list-style: none;
+            display: flex;
+            gap: 50px;
+        }
+
+        .menu ul li a {
+            color: white;
+            text-decoration: none;
+            font-size: var(--font-size-md);
+            transition: color 0.3s, background-color 0.3s;
+            padding: var(--spacing-xs) 0;
+            display: block;
+        }
+
+        .menu ul li a:hover,
+        .menu ul li a:focus {
+            color: #ffd700;
+            outline: none;
+        }
+
+        .menu-icon {
+            font-size: var(--font-size-xl);
+            display: none;
+            cursor: pointer;
+            color: white;
+            outline: 2px solid transparent;
+            outline-offset: 4px;
+            transition: outline-color 0.3s ease;
+        }
+
+        .menu-icon:focus {
+            outline-color: #ffd700;
+        }
+
+        .menu-toggle {
+            display: none;
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding-top: 65px;
+            }
+            .navbar {
+                padding: var(--spacing-md) var(--spacing-lg);
+            }
+            .logo p {
+                font-size: 1.4em;
+            }
+            .menu ul {
+                flex-direction: column;
+                position: absolute;
+                top: 65px;
+                left: 0;
+                background-color: var(--primary-color);
+                width: 100%;
+                display: none;
+                box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+                gap: 0;
+                max-height: calc(100vh - 65px);
+                overflow-y: auto;
+            }
+            .menu ul li {
+                padding: var(--spacing-md) var(--spacing-xl);
+                border-top: 1px solid rgba(255, 255, 255, 0.2);
+            }
+            .menu ul li:first-child {
+                border-top: none;
+            }
+            .menu-icon {
+                display: block;
+            }
+            .menu-toggle:checked + .menu-icon + .menu ul {
+                display: flex;
+            }
+            .container {
+                padding: var(--spacing-lg);
+                margin: var(--spacing-lg) auto;
+            }
+            h1 {
+                font-size: 1.5rem;
+                margin-bottom: var(--spacing-lg);
+            }
+            .form-section h2 {
+                font-size: 1.3rem;
+                margin-bottom: var(--spacing-md);
+            }
+            input[type="text"],
+            input[type="date"],
+            input[type="time"],
+            select,
+            textarea {
+                font-size: var(--font-size-base);
+                padding: var(--spacing-sm);
+            }
+            button {
+                font-size: var(--font-size-base);
+                padding: var(--spacing-sm);
+            }
+        }
+
+        @media (max-width: 480px) {
+            .navbar {
+                padding: var(--spacing-sm) var(--spacing-md);
+            }
+            .logo p {
+                font-size: 1.2em;
+            }
+            .menu ul {
+                top: 55px;
+                max-height: calc(100vh - 55px);
+            }
+            .menu ul li {
+                padding: var(--spacing-md) var(--spacing-lg);
+            }
+            .container {
+                padding: var(--spacing-md);
+                margin: var(--spacing-lg) auto;
+            }
+            h1 {
+                font-size: 1.3rem;
+            }
+            .form-section h2 {
+                font-size: 1.2rem;
+            }
+        }
+
+        /* Estilos para o template da Notificação (inicialmente oculto - para o PDF) */
+        .notification-template {
+            display: none;
+            padding: 50px;
+            box-sizing: border-box;
+            width: 210mm;
+            min-height: 297mm;
+            background-color: var(--container-bg-color);
+            font-family: var(--font-family-document);
+            font-size: var(--font-size-document-base);
+            position: relative;
+            color: var(--text-color);
+            line-height: 1.5;
+        }
+
+        .notification-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .notification-header h1 {
+            color: var(--accent-dark-color);
+            margin: 0 0 10px 0;
+            font-size: var(--font-size-document-title);
+            text-transform: uppercase;
+        }
+
+        .notification-header p {
+            margin: 0;
+        }
+
+        .section-title {
+            font-weight: bold;
+            margin-top: 20px;
+            margin-bottom: 10px;
+            border-bottom: 1px solid var(--light-border-color);
+            padding-bottom: 5px;
+            color: var(--primary-color);
+        }
+
+        .section-content {
+            margin-bottom: 15px;
+        }
+
+        .signature-line {
+            text-align: center;
+            margin-top: 50px;
+            margin-bottom: 5px;
+        }
+
+        .signature-line-text {
+            font-size: var(--font-size-base);
+            font-weight: bold;
+        }
+
+        .footer-date {
+            text-align: right;
+            margin-top: 30px;
+        }
+
+    </style>
+</head>
+
+<body>
+    <header class="navbar">
+        <div class="logo">
+            <p>S. G. D. C. & H.</p>
+        </div>
+
+        <input type="checkbox" id="menu-toggle" class="menu-toggle">
+        <label for="menu-toggle" class="menu-icon" aria-label="Abrir Menu">&#9776;</label>
+
+        <nav class="menu">
+        <ul>
+            <li><a href="geracaodocumentosmedicos.html">Voltar Geração de Documentos</a></li>
+            <li><a href="index.html">Sair</a></li>
+        </ul>
+    </nav>
+    </header>
+
+    <div class="container">
+        <h1>Gerador de Notificação de Acidente de Trabalho</h1>
+
+        <div class="form-section">
+            <h2>Dados da Empresa</h2>
+            <label for="empresaNome">Nome da Empresa:</label>
+            <input type="text" id="empresaNome" placeholder="Ex: Indústria ABC Ltda." required>
+            
+            <label for="empresaCNPJ">CNPJ:</label>
+            <input type="text" id="empresaCNPJ" placeholder="Ex: 00.000.000/0001-00" required>
+            
+            <label for="empresaEndereco">Endereço da Empresa:</label>
+            <input type="text" id="empresaEndereco" placeholder="Ex: Rua das Flores, 123, Centro, São Paulo/SP" required>
+        </div>
+
+        <hr>
+
+        <div class="form-section">
+            <h2>Dados do Empregado</h2>
+            <label for="empregadoNome">Nome Completo do Empregado:</label>
+            <input type="text" id="empregadoNome" placeholder="Ex: João da Silva" required>
+            
+            <label for="empregadoCPF">CPF:</label>
+            <input type="text" id="empregadoCPF" placeholder="Ex: 123.456.789-00" required>
+            
+            <label for="empregadoFuncao">Função do Empregado:</label>
+            <input type="text" id="empregadoFuncao" placeholder="Ex: Operador de Máquinas" required>
+        </div>
+        
+        <hr>
+
+        <div class="form-section">
+            <h2>Detalhes do Acidente</h2>
+            <label for="dataAcidente">Data do Acidente:</label>
+            <input type="date" id="dataAcidente" required>
+            
+            <label for="horaAcidente">Hora do Acidente:</label>
+            <input type="time" id="horaAcidente" required>
+
+            <label for="localAcidente">Local do Acidente:</label>
+            <input type="text" id="localAcidente" placeholder="Ex: Setor de Produção, ao lado da máquina 5" required>
+            
+            <label for="descricaoAcidente">Descrição detalhada do acidente:</label>
+            <textarea id="descricaoAcidente" rows="4" placeholder="Descreva o que ocorreu, como, quando e onde." required></textarea>
+            
+            <label for="lesoes">Lesões ou partes do corpo afetadas:</label>
+            <input type="text" id="lesoes" placeholder="Ex: Ferimento no dedo indicador da mão direita" required>
+        </div>
+
+        <hr>
+        
+        <div class="form-section">
+            <h2>Informações Adicionais</h2>
+            <label for="testemunhas">Testemunhas (nome e contato, se houver):</label>
+            <textarea id="testemunhas" rows="2" placeholder="Ex: Maria de Souza (43) 99999-8888; Pedro Santos (43) 98888-7777"></textarea>
+            
+            <label for="responsavelNotificacao">Nome do Responsável pela Notificação:</label>
+            <input type="text" id="responsavelNotificacao" placeholder="Ex: Ana Oliveira" required>
+
+            <label for="cargoResponsavel">Cargo do Responsável:</label>
+            <input type="text" id="cargoResponsavel" placeholder="Ex: Gerente de RH" required>
+        </div>
+
+        <button onclick="generatePDF()">Gerar Notificação em PDF</button>
+    </div>
+
+    <div id="notification-template" class="notification-template">
+        <div class="notification-header">
+            <h1>Notificação de Acidente de Trabalho</h1>
+            <p><strong>Empresa:</strong> <span id="pdfEmpresaNome"></span></p>
+            <p><strong>CNPJ:</strong> <span id="pdfEmpresaCNPJ"></span></p>
+            <p><strong>Endereço:</strong> <span id="pdfEmpresaEndereco"></span></p>
+        </div>
+
+        <div class="document-body">
+            <h3 class="section-title">Dados do Empregado</h3>
+            <p><strong>Nome:</strong> <span id="pdfEmpregadoNome"></span></p>
+            <p><strong>CPF:</strong> <span id="pdfEmpregadoCPF"></span></p>
+            <p><strong>Função:</strong> <span id="pdfEmpregadoFuncao"></span></p>
+
+            <h3 class="section-title">Detalhes do Acidente</h3>
+            <p><strong>Data:</strong> <span id="pdfDataAcidente"></span></p>
+            <p><strong>Hora:</strong> <span id="pdfHoraAcidente"></span></p>
+            <p><strong>Local:</strong> <span id="pdfLocalAcidente"></span></p>
+            <p><strong>Descrição:</strong> <span id="pdfDescricaoAcidente"></span></p>
+            <p><strong>Lesões:</strong> <span id="pdfLesoes"></span></p>
+
+            <h3 class="section-title">Informações Adicionais</h3>
+            <p><strong>Testemunhas:</strong> <span id="pdfTestemunhas"></span></p>
+            
+            <br>
+            <p><strong>Responsável pela Notificação:</strong> <span id="pdfResponsavelNotificacao"></span></p>
+            <p><strong>Cargo:</strong> <span id="pdfCargoResponsavel"></span></p>
+        </div>
+
+        <p class="footer-date" id="pdfDataLocalEmissao"></p>
+        
+        <br>
+        <br>
+        <div class="signature-line">
+            <p>__________________________________________</p>
+            <p class="signature-line-text"><strong><span id="pdfResponsavelAssinatura"></span></strong></p>
+            <p><span id="pdfCargoResponsavelAssinatura"></span></p>
+        </div>
+    </div>
+
+    <script>
+        // Função para formatar data (dd de [mês] de aaaa)
+        function formatarDataExtenso(dataString) {
+            if (!dataString) return '';
+            const date = new Date(dataString + 'T00:00:00');
+            const options = { day: 'numeric', month: 'long', year: 'numeric' };
+            return date.toLocaleDateString('pt-BR', options);
+        }
+
+        // Função para preencher a data atual nos campos de data
+        document.addEventListener('DOMContentLoaded', () => {
+            const today = new Date();
+            const year = today.getFullYear();
+            const month = String(today.getMonth() + 1).padStart(2, '0');
+            const day = String(today.getDate()).padStart(2, '0');
+            const formattedDate = `${year}-${month}-${day}`;
+            document.getElementById('dataAcidente').value = formattedDate;
+        });
+
+        async function generatePDF() {
+            // 1. Coletar dados do formulário
+            const empresaNome = document.getElementById('empresaNome').value;
+            const empresaCNPJ = document.getElementById('empresaCNPJ').value;
+            const empresaEndereco = document.getElementById('empresaEndereco').value;
+
+            const empregadoNome = document.getElementById('empregadoNome').value;
+            const empregadoCPF = document.getElementById('empregadoCPF').value;
+            const empregadoFuncao = document.getElementById('empregadoFuncao').value;
+
+            const dataAcidente = document.getElementById('dataAcidente').value;
+            const horaAcidente = document.getElementById('horaAcidente').value;
+            const localAcidente = document.getElementById('localAcidente').value;
+            const descricaoAcidente = document.getElementById('descricaoAcidente').value;
+            const lesoes = document.getElementById('lesoes').value;
+
+            const testemunhas = document.getElementById('testemunhas').value;
+            const responsavelNotificacao = document.getElementById('responsavelNotificacao').value;
+            const cargoResponsavel = document.getElementById('cargoResponsavel').value;
+
+            // Validação simples dos campos obrigatórios
+            if (!empresaNome || !empresaCNPJ || !empresaEndereco || !empregadoNome || !empregadoCPF || !empregadoFuncao || !dataAcidente || !horaAcidente || !localAcidente || !descricaoAcidente || !lesoes || !responsavelNotificacao || !cargoResponsavel) {
+                alert("Por favor, preencha todos os campos obrigatórios.");
+                return;
+            }
+
+            // 2. Preencher o modelo de notificação oculto
+            document.getElementById('pdfEmpresaNome').textContent = empresaNome;
+            document.getElementById('pdfEmpresaCNPJ').textContent = empresaCNPJ;
+            document.getElementById('pdfEmpresaEndereco').textContent = empresaEndereco;
+
+            document.getElementById('pdfEmpregadoNome').textContent = empregadoNome;
+            document.getElementById('pdfEmpregadoCPF').textContent = empregadoCPF;
+            document.getElementById('pdfEmpregadoFuncao').textContent = empregadoFuncao;
+
+            document.getElementById('pdfDataAcidente').textContent = formatarDataExtenso(dataAcidente);
+            document.getElementById('pdfHoraAcidente').textContent = horaAcidente;
+            document.getElementById('pdfLocalAcidente').textContent = localAcidente;
+            document.getElementById('pdfDescricaoAcidente').textContent = descricaoAcidente;
+            document.getElementById('pdfLesoes').textContent = lesoes;
+            document.getElementById('pdfTestemunhas').textContent = testemunhas || "Não há testemunhas.";
+            
+            document.getElementById('pdfResponsavelNotificacao').textContent = responsavelNotificacao;
+            document.getElementById('pdfCargoResponsavel').textContent = cargoResponsavel;
+
+            const today = new Date();
+            const localDate = today.toLocaleDateString('pt-BR', { day: 'numeric', month: 'long', year: 'numeric' });
+            document.getElementById('pdfDataLocalEmissao').textContent = `Londrina, ${localDate}.`;
+            
+            document.getElementById('pdfResponsavelAssinatura').textContent = responsavelNotificacao;
+            document.getElementById('pdfCargoResponsavelAssinatura').textContent = cargoResponsavel;
+
+            // 3. Gerar o PDF
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF('p', 'mm', 'a4');
+            const element = document.getElementById('notification-template');
+
+            element.style.display = 'block';
+
+            try {
+                const canvas = await html2canvas(element, {
+                    scale: 2,
+                    useCORS: true,
+                    logging: true
+                });
+
+                const imgData = canvas.toDataURL('image/png');
+                const imgWidth = 210;
+                const pageHeight = 297;
+                const imgHeight = canvas.height * imgWidth / canvas.width;
+                let heightLeft = imgHeight;
+                let position = 0;
+
+                doc.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+                heightLeft -= pageHeight;
+
+                while (heightLeft >= 0) {
+                    position = heightLeft - imgHeight;
+                    doc.addPage();
+                    doc.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+                    heightLeft -= pageHeight;
+                }
+
+                doc.save('Notificacao_Acidente_Trabalho.pdf');
+
+            } catch (error) {
+                console.error("Erro ao gerar o PDF:", error);
+                alert("Ocorreu um erro ao gerar o PDF. Por favor, tente novamente.");
+            } finally {
+                element.style.display = 'none';
+            }
+        }
+    </script>
+</body>
+</html>

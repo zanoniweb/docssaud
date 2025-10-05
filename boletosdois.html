@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Gerador de Boletos em Lotes</title>
+
+    <style>
+        /* Começo do código da estilização do menu de navegação */
+        /* Reset básico */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background: #e0e0e0; /* Unificado */
+            padding: 20px; /* Unificado */
+        }
+
+        /* Navbar */
+        .navbar {
+            background-color: #004080;
+            color: white;
+            padding: 15px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: relative;
+        }
+
+        .logo p {
+            color: white;
+            font-size: 1.6em;
+            font-weight: bold;
+        }
+
+        .menu ul {
+            list-style: none;
+            display: flex;
+            gap: 20px;
+        }
+
+        .menu ul li a {
+            color: white;
+            text-decoration: none;
+            font-size: 1em;
+            transition: color 0.3s;
+        }
+
+        .menu ul li a:hover {
+            color: #ffd700;
+        }
+
+        .menu-icon {
+            font-size: 1.8em;
+            display: none;
+            cursor: pointer;
+        }
+
+        /* Esconde o checkbox */
+        .menu-toggle {
+            display: none;
+        }
+
+        /* Estilização do formulário */
+        .container {
+            background: white;
+            max-width: 800px;
+            margin: auto;
+            padding: 30px 40px;
+            border: 1px solid #888;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.15);
+            font-size: 14px;
+        }
+
+        h2, h3 { /* Estilo unificado para títulos */
+            font-family: 'Georgia', serif;
+            text-align: center;
+            margin-bottom: 30px;
+            color: #222;
+        }
+
+        h2 {
+            font-size: 22px;
+            text-transform: uppercase;
+        }
+
+        h3 {
+            font-size: 18px;
+            margin-top: 25px; /* Adiciona espaçamento entre as seções */
+        }
+        
+        label {
+            display: block;
+            margin-top: 15px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        input,
+        select,
+        textarea {
+            width: 100%;
+            padding: 8px 10px;
+            margin-top: 6px;
+            border: 1px solid #999;
+            border-radius: 3px;
+            box-sizing: border-box;
+            font-family: 'Courier New', monospace;
+            background: #fafafa;
+            font-size: 13px;
+        }
+
+        textarea {
+            resize: vertical;
+        }
+
+        button {
+            background: #004080;
+            color: #fff;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+            padding: 12px 20px;
+            margin-top: 25px;
+            border-radius: 4px;
+            font-weight: bold;
+            transition: background 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%; /* Botão em 100% da largura do contêiner */
+        }
+        
+        button:hover {
+            background: #00264d;
+        }
+
+        hr {
+            margin: 20px 0;
+            border-color: #ddd; /* Cor suave para a linha */
+        }
+
+        #operacaoContainer {
+            display: none;
+        }
+        
+        footer {
+            margin-top: 20px;
+            text-align: center;
+            font-style: italic;
+        }
+
+        footer img {
+            vertical-align: middle;
+            height: 1.2em; /* Tamanho ajustado da imagem */
+        }
+
+        /* Responsividade */
+        @media (max-width: 768px) {
+            .menu ul {
+                flex-direction: column;
+                position: absolute;
+                top: 60px;
+                right: 0;
+                background-color: #004080;
+                width: 100%;
+                display: none;
+                z-index: 1000;
+            }
+
+            .menu ul li {
+                padding: 15px;
+                border-top: 1px solid rgba(255, 255, 255, 0.2);
+            }
+
+            .menu-icon {
+                display: block;
+            }
+
+            /* Quando o checkbox está marcado, mostra o menu */
+            .menu-toggle:checked + .menu-icon + .menu ul {
+                display: flex;
+            }
+        }
+
+        @media (max-width: 600px) {
+            body {
+                padding: 10px;
+            }
+
+            .container {
+                padding: 20px;
+                box-shadow: none;
+                border: none;
+            }
+
+            h2 {
+                font-size: 18px;
+                margin-bottom: 20px;
+            }
+
+            input,
+            select,
+            textarea,
+            button {
+                font-size: 14px;
+                padding: 10px;
+            }
+        }
+
+        @media (min-width: 601px) and (max-width: 900px) {
+            body {
+                padding: 15px;
+            }
+
+            .container {
+                padding: 25px 30px;
+            }
+
+            h2 {
+                font-size: 20px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <header class="navbar">
+        <div class="logo">
+            <p>S. G. D. C. & H.</p>
+        </div>
+
+        <input type="checkbox" id="menu-toggle" class="menu-toggle">
+        <label for="menu-toggle" class="menu-icon">&#9776;</label>
+
+        <nav class="menu">
+            <ul>
+                <li><a href="geracaodocumentosfinanceiros.html">Voltar Geração de Documentos</a></li>
+                <li><a href="index.html">Sair</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <div class="container">
+        <h2>Gerador de Boletos em Lotes</h2>
+
+        <h3>Informações da Clínica/Hospital</h3>
+        <label>Razão Social:</label>
+        <input type="text" id="razao" placeholder="Ex: Clínica ABC LTDA">
+
+        <label>CNPJ:</label>
+        <input type="text" id="cnpj" placeholder="00.000.000/0000-00">
+
+        <label>Banco:</label>
+        <input type="text" id="banco" placeholder="Ex: Caixa Econômica Federal">
+
+        <label>Agência:</label>
+        <input type="text" id="agencia" placeholder="Ex: 0001">
+
+        <div id="operacaoContainer">
+            <label>Operação:</label>
+            <input type="text" id="operacao" placeholder="Ex: 003">
+        </div>
+
+        <label>Conta:</label>
+        <input type="text" id="conta" placeholder="Ex: 12345-6">
+
+        <hr>
+        <h3>Dados do Pagamento</h3>
+        <label>Valor Total (R$):</label>
+        <input type="number" id="valorTotal" min="0.01" step="0.01" placeholder="Ex: 1000.00">
+
+        <label>Quantidade de Boletos:</label>
+        <input type="number" id="quantidadeBoletos" min="1" step="1" value="1" placeholder="Ex: 12">
+
+        <label>Juros (R$):</label>
+        <input type="number" id="juros" min="0.00" step="0.01" value="0.00" placeholder="Ex: 5.50">
+
+        <label>Multa (R$):</label>
+        <input type="number" id="multa" min="0.00" step="0.01" value="0.00" placeholder="Ex: 10.00">
+
+        <label>Data de Vencimento do Primeiro Boleto:</label>
+        <input type="date" id="dataVencimentoOriginal">
+
+        <label>Observação do Pagamento:</label>
+        <textarea id="observacoes" rows="4" placeholder="Ex: Referente à parcela {X}/{Y} de Cirurgia de joelho. O texto {X}/{Y} será substituído pelo número da parcela."></textarea>
+
+        <hr>
+        <h3>Informações do Credor (Pagador)</h3>
+        <label>Nome do Credor:</label>
+        <input type="text" id="credor" placeholder="Ex: João da Silva">
+
+        <label>CPF do Credor:</label>
+        <input type="text" id="cpfCredor" placeholder="000.000.000-00">
+
+        <hr>
+        <h3>Chave Pix</h3>
+        <p>A chave Pix será usada para gerar o QR Code. Escolha o tipo de chave e digite o valor correspondente.</p>
+        <label>Tipo de Chave:</label>
+        <select id="pixKeyType">
+            <option value="">Selecione...</option>
+            <option value="cpf">CPF</option>
+            <option value="cnpj">CNPJ</option>
+            <option value="telefone">Telefone</option>
+            <option value="email">E-mail</option>
+        </select>
+
+        <label>Chave Pix:</label>
+        <input type="text" id="pixKey" placeholder="Digite a chave Pix (sem formatação)">
+
+        <button onclick="gerarBoletosEmLote()">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width: 1em; height: 1em; vertical-align: middle; margin-right: 8px;">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" />
+            </svg>
+            Gerar Boletos em Lote PDF
+        </button>
+    </div>
+
+    <footer>
+        <center>
+            <i>
+                <p>Web programa desenvolvido por Juliano <img src="https://d1yei2z3i6k35z.cloudfront.net/6946809/65e45ac72773e_zanoni.1.png" alt="Logo de Juliano Zanoni"></p>
+            </i>
+        </center>
+    </footer>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script>
+        const bancoInput = document.getElementById('banco');
+        const operacaoContainer = document.getElementById('operacaoContainer');
+
+        bancoInput.addEventListener('input', toggleOperacaoField);
+
+        function toggleOperacaoField() {
+            const bancoNome = bancoInput.value.trim().toLowerCase();
+            if (bancoNome.includes('caixa') || bancoNome.includes('cef')) {
+                operacaoContainer.style.display = 'block';
+            } else {
+                operacaoContainer.style.display = 'none';
+            }
+        }
+
+        async function gerarBoletosEmLote() {
+            const razao = document.getElementById('razao').value.trim();
+            const cnpj = document.getElementById('cnpj').value.trim();
+            const banco = document.getElementById('banco').value.trim();
+            const agencia = document.getElementById('agencia').value.trim();
+            const operacao = document.getElementById('operacaoContainer').style.display === 'block' ? document.getElementById('operacao').value.trim() : null;
+            const conta = document.getElementById('conta').value.trim();
+            const valorTotal = parseFloat(document.getElementById('valorTotal').value);
+            const juros = parseFloat(document.getElementById('juros').value) || 0;
+            const multa = parseFloat(document.getElementById('multa').value) || 0;
+            const dataVencimentoStr = document.getElementById('dataVencimentoOriginal').value;
+            const quantidadeBoletos = parseInt(document.getElementById('quantidadeBoletos').value);
+            const credor = document.getElementById('credor').value.trim();
+            const cpf = document.getElementById('cpfCredor').value.trim();
+            const obsTemplate = document.getElementById('observacoes').value.trim();
+            const pixKeyType = document.getElementById('pixKeyType').value;
+            const pixKey = document.getElementById('pixKey').value.trim();
+
+            if (!razao || !cnpj || !banco || !agencia || !conta || isNaN(valorTotal) || !credor || !cpf || !dataVencimentoStr || !pixKeyType || !pixKey || isNaN(quantidadeBoletos) || quantidadeBoletos < 1) {
+                alert('Por favor, preencha todos os campos obrigatórios e verifique a quantidade de boletos.');
+                return;
+            }
+
+            if (operacaoContainer.style.display === 'block' && !operacao) {
+                alert('O número da operação é obrigatório para o banco Caixa Econômica Federal.');
+                return;
+            }
+
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            let valorCorrigidoTotal = valorTotal + juros + multa;
+            let valorParcelaCorrigida = valorCorrigidoTotal / quantidadeBoletos;
+            
+            let dataVencimentoOriginal = new Date(dataVencimentoStr + 'T00:00:00');
+            let dataVencimentoAtual = new Date(dataVencimentoOriginal.getTime());
+
+            let isFirstPage = true;
+
+            for (let i = 0; i < quantidadeBoletos; i++) {
+                if (!isFirstPage) {
+                    doc.addPage();
+                } else {
+                    isFirstPage = false;
+                }
+
+                let valorFinalParcela = valorParcelaCorrigida;
+                if (i === quantidadeBoletos - 1) {
+                    const somaParcelasAnteriores = valorParcelaCorrigida * i;
+                    valorFinalParcela = valorCorrigidoTotal - somaParcelasAnteriores;
+                }
+                
+                const valorExibicao = valorFinalParcela.toFixed(2);
+                const vencStr = dataVencimentoAtual.toLocaleDateString('pt-BR');
+                const obsParcela = obsTemplate.replace('{X}', (i + 1)).replace('{Y}', quantidadeBoletos);
+
+                // --- Gerar o Boleto Corrigido (sem capa ou contra capa) ---
+                doc.setDrawColor(0);
+                doc.setLineWidth(0.2);
+                doc.setFontSize(12);
+                doc.setFont("helvetica", "bold");
+                doc.text(`Boleto ${i + 1}/${quantidadeBoletos}`, 80, 15);
+                doc.rect(10, 20, 190, 130);
+
+                doc.rect(10, 20, 190, 15);
+                doc.setFontSize(10);
+                doc.setFont("times", "normal");
+                doc.text(`Razão Social: ${razao}`, 12, 28);
+                doc.text(`CNPJ: ${cnpj}`, 130, 28);
+                doc.text(`Banco: ${banco}`, 12, 33);
+                doc.text(`Agência: ${agencia}`, 130, 33);
+
+                doc.rect(10, 35, 190, 15);
+                if (operacao) {
+                    doc.text(`Operação: ${operacao}`, 12, 43);
+                    doc.text(`Conta: ${conta}`, 130, 43);
+                } else {
+                    doc.text(`Conta: ${conta}`, 12, 43);
+                }
+
+                doc.rect(10, 50, 190, 15);
+                doc.text(`Credor: ${credor}`, 12, 58);
+                doc.text(`CPF: ${cpf}`, 130, 58);
+
+                doc.rect(10, 65, 190, 15);
+                doc.text(`Valor Original: R$ ${valorTotal.toFixed(2)}`, 12, 73);
+                doc.text(`Juros: R$ ${juros.toFixed(2)}`, 80, 73);
+                doc.text(`Multa: R$ ${multa.toFixed(2)}`, 140, 73);
+
+                doc.rect(10, 80, 190, 15);
+                doc.setFontSize(11);
+                doc.setFont("helvetica", "bold");
+                doc.text(`VALOR DA PARCELA: R$ ${valorExibicao}`, 12, 88);
+
+                doc.rect(10, 95, 190, 15);
+                doc.setFontSize(10);
+                doc.setFont("times", "normal");
+                doc.text(`Vencimento Original: ${dataVencimentoOriginal.toLocaleDateString('pt-BR')}`, 12, 103);
+                doc.text(`Novo Vencimento: ${vencStr}`, 130, 103);
+
+                doc.rect(10, 110, 190, 40);
+                doc.text("Observação:", 12, 118);
+                const obsBoletoLines = doc.splitTextToSize(obsParcela, 120);
+                doc.text(obsBoletoLines, 12, 125, { lineHeightFactor: 1.5 });
+
+                const qrText = `pixKey=${pixKey}&pixKeyType=${pixKeyType}&amount=${valorExibicao}&payerName=${credor}&description=${obsParcela}`;
+                const qrDiv = document.createElement('div');
+                new QRCode(qrDiv, {
+                    text: qrText,
+                    width: 50,
+                    height: 50,
+                    correctLevel: QRCode.CorrectLevel.H
+                });
+
+                // Pausa para garantir que o QR Code seja totalmente renderizado
+                await new Promise(resolve => setTimeout(resolve, 150));
+
+                const qrImg = qrDiv.querySelector('img') || qrDiv.querySelector('canvas');
+                if (qrImg) {
+                    const imgData = qrImg.tagName === 'IMG' ? qrImg.src : qrImg.toDataURL('image/png');
+                    doc.addImage(imgData, 'PNG', 150, 113, 30, 30);
+                }
+                qrDiv.remove();
+                
+                dataVencimentoAtual.setMonth(dataVencimentoAtual.getMonth() + 1);
+                if (dataVencimentoAtual.getDate() !== dataVencimentoOriginal.getDate()) {
+                    dataVencimentoAtual.setDate(0); 
+                }
+            }
+
+            doc.save('boletos_lote.pdf');
+        }
+    </script>
+</body>
+</html>

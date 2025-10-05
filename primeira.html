@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SISTEMA DE GERAÇÃO DE CHAVES</title>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" defer></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js" defer></script>
+
+    <style>
+        /* Reset básico e configurações globais */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            /* Cores principais */
+            --primary-color: #004080; /* Azul escuro para navbar */
+            --accent-color: #28a745; /* Verde para botões e títulos de atestado */
+            --accent-dark-color: #1e7e34; /* Verde mais escuro para hover */
+            --text-color: #333;
+            --light-text-color: #555;
+            --background-color: #f4f4f4;
+            --container-bg-color: #fff;
+            --section-bg-color: #f9f9f9;
+            --border-color: #ccc;
+            --light-border-color: #ddd;
+
+            /* Fontes */
+            --font-family-main: 'Arial', sans-serif;
+            --font-family-document: 'Times New Roman', serif;
+
+            /* Tamanhos de fonte */
+            --font-size-base: 1rem; /* 16px */
+            --font-size-sm: 0.9rem; /* 14.4px */
+            --font-size-md: 1.1rem; /* 17.6px */
+            --font-size-lg: 1.6rem; /* 25.6px - para logo */
+            --font-size-xl: 2em; /* Para ícones */
+            --font-size-h1: 1.8rem; /* Para h1 do container */
+            --font-size-h2: 1.5rem; /* Para h2 do form-section */
+            --font-size-notification-title: 1.8rem; /* Para título do PDF */
+            --font-size-document-base: 12pt; /* Para texto do PDF */
+            --font-size-document-title: 16pt; /* Para título do PDF */
+
+            /* Espaçamentos */
+            --spacing-xs: 8px;
+            --spacing-sm: 10px;
+            --spacing-md: 15px;
+            --spacing-lg: 20px;
+            --spacing-xl: 30px;
+            --spacing-xxl: 40px;
+        }
+
+        /* Body e Layout Geral */
+        body {
+            font-family: var(--font-family-main);
+            line-height: 1.6;
+            margin: 0;
+            padding-top: 80px;
+            background-color: var(--background-color);
+            color: var(--text-color);
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        /* Container principal do formulário */
+        .container {
+            max-width: 800px;
+            width: 95%;
+            margin: var(--spacing-lg) auto;
+            padding: var(--spacing-xl);
+            background-color: var(--container-bg-color);
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            text-align: center;
+            color: var(--accent-dark-color);
+            margin-bottom: var(--spacing-xl);
+            font-size: var(--font-size-h1);
+        }
+
+        /* Seções do Formulário */
+        .form-section {
+            margin-bottom: var(--spacing-lg);
+            padding: var(--spacing-md);
+            border: 1px solid var(--light-border-color);
+            border-radius: 5px;
+            background-color: var(--section-bg-color);
+        }
+
+        .form-section h2 {
+            color: var(--accent-dark-color);
+            margin-top: 0;
+            margin-bottom: var(--spacing-md);
+            border-bottom: 2px solid #eee;
+            padding-bottom: var(--spacing-xs);
+            font-size: var(--font-size-h2);
+        }
+
+        label {
+            display: block;
+            margin-bottom: var(--spacing-xs);
+            font-weight: bold;
+            color: var(--light-text-color);
+            cursor: pointer;
+        }
+
+        input[type="text"],
+        input[type="email"],
+        input[type="date"],
+        input[type="number"],
+        input[type="time"],
+        select,
+        textarea {
+            width: 100%;
+            padding: var(--spacing-sm);
+            margin-bottom: var(--spacing-md);
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            font-size: var(--font-size-base);
+            box-sizing: border-box;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
+        }
+
+        input[type="date"],
+        input[type="time"] {
+            padding: var(--spacing-sm) 10px;
+        }
+
+        input[type="text"]:focus,
+        input[type="email"]:focus,
+        input[type="date"]:focus,
+        input[type="number"]:focus,
+        input[type="time"]:focus,
+        select:focus,
+        textarea:focus {
+            border-color: var(--accent-color);
+            outline: none;
+            box-shadow: 0 0 5px rgba(var(--accent-color), 0.25);
+            outline: 2px solid var(--accent-color);
+            outline-offset: 2px;
+        }
+
+        select {
+            padding-right: var(--spacing-xl);
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%23333' viewBox='0 0 16 16'%3E%3Cpath fill-rule='evenodd' d='M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 10px center;
+            background-size: 16px;
+        }
+
+        button {
+            display: block;
+            width: 100%;
+            padding: var(--spacing-md);
+            background-color: var(--accent-color);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: var(--font-size-md);
+            cursor: pointer;
+            transition: background-color 0.3s ease, transform 0.1s ease;
+            margin-top: var(--spacing-lg);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        button:hover {
+            background-color: var(--accent-dark-color);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+        }
+
+        button:active {
+            transform: translateY(0);
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+        }
+
+        hr {
+            border: 0;
+            height: 1px;
+            background-image: linear-gradient(to right, rgba(0, 0, 0, 0), rgba(0, 0, 0, 0.75), rgba(0, 0, 0, 0));
+            margin: var(--spacing-xl) 0;
+        }
+
+        /* Estilos do Menu de Navegação */
+        .navbar {
+            background-color: var(--primary-color);
+            color: white;
+            padding: var(--spacing-lg) var(--spacing-xl);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            z-index: 1000;
+        }
+
+        .logo p {
+            color: white;
+            font-size: var(--font-size-lg);
+            font-weight: bold;
+        }
+
+        .menu ul {
+            list-style: none;
+            display: flex;
+            gap: 50px;
+        }
+
+        .menu ul li a {
+            color: white;
+            text-decoration: none;
+            font-size: var(--font-size-md);
+            transition: color 0.3s, background-color 0.3s;
+            padding: var(--spacing-xs) 0;
+            display: block;
+        }
+
+        .menu ul li a:hover,
+        .menu ul li a:focus {
+            color: #ffd700;
+            outline: none;
+        }
+
+        .menu-icon {
+            font-size: var(--font-size-xl);
+            display: none;
+            cursor: pointer;
+            color: white;
+            outline: 2px solid transparent;
+            outline-offset: 4px;
+            transition: outline-color 0.3s ease;
+        }
+        .menu-icon:focus {
+            outline-color: #ffd700;
+        }
+
+        .menu-toggle {
+            display: none;
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding-top: 65px;
+            }
+            .navbar {
+                padding: var(--spacing-md) var(--spacing-lg);
+            }
+            .logo p {
+                font-size: 1.4em;
+            }
+            .menu ul {
+                flex-direction: column;
+                position: absolute;
+                top: 65px;
+                left: 0;
+                background-color: var(--primary-color);
+                width: 100%;
+                display: none;
+                box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+                gap: 0;
+                max-height: calc(100vh - 65px);
+                overflow-y: auto;
+            }
+            .menu ul li {
+                padding: var(--spacing-md) var(--spacing-xl);
+                border-top: 1px solid rgba(255, 255, 255, 0.2);
+            }
+            .menu ul li:first-child {
+                border-top: none;
+            }
+            .menu-icon {
+                display: block;
+            }
+            .menu-toggle:checked + .menu-icon + .menu ul {
+                display: flex;
+            }
+            .container {
+                padding: var(--spacing-lg);
+                margin: var(--spacing-lg) auto;
+            }
+            h1 {
+                font-size: 1.5rem;
+                margin-bottom: var(--spacing-lg);
+            }
+            .form-section h2 {
+                font-size: 1.3rem;
+                margin-bottom: var(--spacing-md);
+            }
+            input[type="text"],
+            input[type="email"],
+            input[type="date"],
+            input[type="number"],
+            select,
+            textarea {
+                font-size: var(--font-size-base);
+                padding: var(--spacing-sm);
+            }
+            button {
+                font-size: var(--font-size-base);
+                padding: var(--spacing-sm);
+            }
+        }
+
+        @media (max-width: 480px) {
+            .navbar {
+                padding: var(--spacing-sm) var(--spacing-md);
+            }
+            .logo p {
+                font-size: 1.2em;
+            }
+            .menu ul {
+                top: 55px;
+                max-height: calc(100vh - 55px);
+            }
+            .menu ul li {
+                padding: var(--spacing-md) var(--spacing-lg);
+            }
+            .container {
+                padding: var(--spacing-md);
+                margin: var(--spacing-lg) auto;
+            }
+            h1 {
+                font-size: 1.3rem;
+            }
+            .form-section h2 {
+                font-size: 1.2rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    
+    <header class="navbar">
+        <div class="logo">
+            <p>S. G. D. C. & H.</p>
+        </div>
+
+        <input type="checkbox" id="menu-toggle" class="menu-toggle">
+        <label for="menu-toggle" class="menu-icon" aria-label="Abrir Menu">&#9776;</label>
+
+        <nav class="menu">
+        <ul>
+            <li><a href="geracaodocumentosmedicos.html">Voltar Geração de Documentos</a></li>
+            <li><a href="index.html">Sair</a></li>
+        </ul>
+    </nav>
+    </header>
+
+    <div class="container">
+        <h1>Gerador de Chave de Validação Digital</h1>
+
+        <div class="form-section">
+            <h2>Dados para a Chave</h2>
+            <label for="texto">Digite a assinatura ou texto de origem:</label>
+            <textarea id="texto" placeholder="Ex Dr Pepe Junior CRM/RJ 12345 25/08/2022 (data da assinatura de um suposto documento)" rows="5"></textarea>
+        </div>
+
+        <button onclick="gerarPDF()">Gerar e Salvar Chave em PDF</button>
+    </div>
+
+    <script>
+        async function gerarPDF() {
+            const texto = document.getElementById("texto").value;
+            if (!texto) {
+                alert("Por favor, digite uma assinatura ou texto de origem para gerar a chave.");
+                return;
+            }
+
+            // 1. Gera o hash curto (Base64 truncado)
+            const msgUint8 = new TextEncoder().encode(texto);
+            const hashBuffer = await crypto.subtle.digest("SHA-256", msgUint8);
+            const hashArray = Array.from(new Uint8Array(hashBuffer));
+            const hashBase64 = btoa(String.fromCharCode.apply(null, hashArray)).substring(0, 32);
+
+            // 2. Cria o documento PDF com o jsPDF
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF({
+                orientation: 'portrait',
+                unit: 'mm',
+                format: 'a4'
+            });
+
+            const marginX = 25; // Margem lateral de 25mm
+            const startY = 50;  // Posição Y inicial
+            const lineHeight = 7; // Espaçamento entre as linhas
+            let currentY = startY;
+
+            // Título
+            doc.setFont("Times", "bold");
+            doc.setFontSize(20);
+            doc.text("Chave de Validação Digital", 105, currentY, null, null, "center");
+            currentY += 20;
+
+            // Texto de introdução
+            doc.setFont("Times", "normal");
+            doc.setFontSize(12);
+            doc.text("A presente chave de validação foi gerada digitalmente com base na seguinte assinatura:", marginX, currentY);
+            currentY += lineHeight;
+            
+            // Texto da assinatura (centralizado e com quebra de linha)
+            const splitSignature = doc.splitTextToSize(texto, 160); // 160mm de largura para o texto
+            doc.setFont("Times", "italic");
+            doc.text(splitSignature, marginX, currentY);
+            currentY += (splitSignature.length * lineHeight) + 10;
+            
+            // Texto da chave
+            doc.setFont("Times", "normal");
+            doc.text("A chave única de validação gerada para este documento é:", marginX, currentY);
+            currentY += lineHeight;
+            
+            // Chave (em estilo monoespaçado para fácil leitura)
+            doc.setFont("Courier", "normal");
+            doc.text(hashBase64, marginX, currentY);
+            currentY += 20;
+
+            // Texto de explicação
+            doc.setFont("Times", "normal");
+            const explicacaoText = "Esta chave pode ser utilizada para verificar a integridade e a autenticidade deste documento. A validade jurídica da assinatura se baseia no mútuo acordo entre as partes, conforme a liberdade de forma prevista no Código Civil (Lei nº 10.406/2002), em seu Art. 107. A comprovação da integridade do documento por meio desta chave criptográfica reforça a sua validade, conforme o Art. 219 do mesmo Código.";
+            const splitExplicacao = doc.splitTextToSize(explicacaoText, 160);
+            doc.text(splitExplicacao, marginX, currentY);
+            currentY += (splitExplicacao.length * lineHeight);
+
+            // Texto do site (novo)
+            doc.text("Para verificar a autenticidade deste documento, acesse: saudedocs.com.br", marginX, currentY + 10);
+            
+            // Salva o PDF
+            doc.save('chave_validacao.pdf');
+
+            alert("Chave gerada e salva em PDF!");
+        }
+    </script>
+</body>
+</html>

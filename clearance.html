@@ -1,0 +1,552 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calculadora de Função Renal (Clearance de Creatinina)</title>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    
+    <style>
+        /* Estilos CSS do código original */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary-color: #004080;
+            --accent-color: #28a745;
+            --accent-dark-color: #1e7e34;
+            --text-color: #333;
+            --light-text-color: #555;
+            --background-color: #f4f4f4;
+            --container-bg-color: #fff;
+            --section-bg-color: #f9f9f9;
+            --border-color: #ccc;
+            --light-border-color: #ddd;
+            --font-family-main: 'Arial', sans-serif;
+            --font-size-base: 1rem;
+            --font-size-sm: 0.9rem;
+            --font-size-md: 1.1rem;
+            --font-size-lg: 1.6rem;
+            --font-size-xl: 2em;
+            --font-size-h1: 1.8rem;
+            --font-size-h2: 1.5rem;
+            --spacing-xs: 8px;
+            --spacing-sm: 10px;
+            --spacing-md: 15px;
+            --spacing-lg: 20px;
+            --spacing-xl: 30px;
+            --spacing-xxl: 40px;
+        }
+
+        body {
+            font-family: var(--font-family-main);
+            line-height: 1.6;
+            margin: 0;
+            padding-top: 80px;
+            background-color: var(--background-color);
+            color: var(--text-color);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 500px;
+            width: 95%;
+            margin: var(--spacing-lg) auto;
+            padding: var(--spacing-xl);
+            background-color: var(--container-bg-color);
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            text-align: center;
+            color: var(--accent-dark-color);
+            margin-bottom: var(--spacing-xl);
+            font-size: var(--font-size-h1);
+        }
+
+        .form-section {
+            margin-bottom: var(--spacing-lg);
+            padding: var(--spacing-md);
+            border: 1px solid var(--light-border-color);
+            border-radius: 5px;
+            background-color: var(--section-bg-color);
+        }
+
+        .form-section h2 {
+            color: var(--accent-dark-color);
+            margin-top: 0;
+            margin-bottom: var(--spacing-md);
+            border-bottom: 2px solid #eee;
+            padding-bottom: var(--spacing-xs);
+            font-size: var(--font-size-h2);
+        }
+
+        label {
+            display: block;
+            margin-bottom: var(--spacing-xs);
+            font-weight: bold;
+            color: var(--light-text-color);
+            cursor: pointer;
+        }
+
+        input[type="number"],
+        input[type="text"],
+        select {
+            width: 100%;
+            padding: var(--spacing-sm);
+            margin-bottom: var(--spacing-md);
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            font-size: var(--font-size-base);
+            box-sizing: border-box;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
+        }
+
+        input[type="number"]:focus,
+        input[type="text"]:focus,
+        select:focus {
+            border-color: var(--accent-color);
+            outline: none;
+            box-shadow: 0 0 5px rgba(var(--accent-color), 0.25);
+            outline: 2px solid var(--accent-color);
+            outline-offset: 2px;
+        }
+
+        button {
+            display: block;
+            width: 100%;
+            padding: var(--spacing-md);
+            background-color: var(--accent-color);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: var(--font-size-md);
+            cursor: pointer;
+            transition: background-color 0.3s ease, transform 0.1s ease;
+            margin-top: var(--spacing-lg);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        button:hover {
+            background-color: var(--accent-dark-color);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+        }
+
+        button:active {
+            transform: translateY(0);
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+        }
+
+        hr {
+            border: 0;
+            height: 1px;
+            background-image: linear-gradient(to right, rgba(0, 0, 0, 0), rgba(0, 0, 0, 0.75), rgba(0, 0, 0, 0));
+            margin: var(--spacing-xl) 0;
+        }
+
+        #resultado-clearance {
+            margin-top: var(--spacing-lg);
+            padding: var(--spacing-md);
+            border-top: 2px solid var(--border-color);
+            text-align: left;
+        }
+
+        #resultado-clearance h3 {
+            color: var(--accent-dark-color);
+            margin-bottom: var(--spacing-sm);
+            text-align: center;
+        }
+
+        #resultado-clearance p {
+            text-align: center;
+        }
+        
+        /* Estilos do Menu de Navegação */
+        .navbar {
+            background-color: var(--primary-color);
+            color: white;
+            padding: var(--spacing-lg) var(--spacing-xl);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            z-index: 1000;
+        }
+
+        .logo p {
+            color: white;
+            font-size: var(--font-size-lg);
+            font-weight: bold;
+        }
+
+        .menu ul {
+            list-style: none;
+            display: flex;
+            gap: 50px;
+        }
+
+        .menu ul li a {
+            color: white;
+            text-decoration: none;
+            font-size: var(--font-size-md);
+            transition: color 0.3s, background-color 0.3s;
+            padding: var(--spacing-xs) 0;
+            display: block;
+        }
+
+        .menu ul li a:hover,
+        .menu ul li a:focus {
+            color: #ffd700;
+            outline: none;
+        }
+
+        .menu-icon {
+            font-size: var(--font-size-xl);
+            display: none;
+            cursor: pointer;
+            color: white;
+            outline: 2px solid transparent;
+            outline-offset: 4px;
+            transition: outline-color 0.3s ease;
+        }
+        .menu-icon:focus {
+            outline-color: #ffd700;
+        }
+
+        .menu-toggle {
+            display: none;
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding-top: 65px;
+            }
+            .navbar {
+                padding: var(--spacing-md) var(--spacing-lg);
+            }
+            .logo p {
+                font-size: 1.4em;
+            }
+            .menu ul {
+                flex-direction: column;
+                position: absolute;
+                top: 65px;
+                left: 0;
+                background-color: var(--primary-color);
+                width: 100%;
+                display: none;
+                box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+                gap: 0;
+                max-height: calc(100vh - 65px);
+                overflow-y: auto;
+            }
+            .menu ul li {
+                padding: var(--spacing-md) var(--spacing-xl);
+                border-top: 1px solid rgba(255, 255, 255, 0.2);
+            }
+            .menu ul li:first-child {
+                border-top: none;
+            }
+            .menu-icon {
+                display: block;
+            }
+            .menu-toggle:checked + .menu-icon + .menu ul {
+                display: flex;
+            }
+            .container {
+                padding: var(--spacing-lg);
+                margin: var(--spacing-lg) auto;
+            }
+            h1 {
+                font-size: 1.5rem;
+                margin-bottom: var(--spacing-lg);
+            }
+            .form-section h2 {
+                font-size: 1.3rem;
+                margin-bottom: var(--spacing-md);
+            }
+            input[type="number"] {
+                font-size: var(--font-size-base);
+                padding: var(--spacing-sm);
+            }
+            button {
+                font-size: var(--font-size-base);
+                padding: var(--spacing-sm);
+            }
+        }
+
+        @media (max-width: 480px) {
+            .navbar {
+                padding: var(--spacing-sm) var(--spacing-md);
+            }
+            .logo p {
+                font-size: 1.2em;
+            }
+            .menu ul {
+                top: 55px;
+                max-height: calc(100vh - 55px);
+            }
+            .menu ul li {
+                padding: var(--spacing-md) var(--spacing-lg);
+            }
+            .container {
+                padding: var(--spacing-md);
+                margin: var(--spacing-lg) auto;
+            }
+            h1 {
+                font-size: 1.3rem;
+            }
+            .form-section h2 {
+                font-size: 1.2rem;
+            }
+        }
+
+        .laudo-button {
+            background-color: #007bff;
+            margin-top: 10px;
+        }
+        .laudo-button:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+
+<body>
+    <header class="navbar">
+        <div class="logo">
+            <p>S. G. D. C. & H.</p>
+        </div>
+
+        <input type="checkbox" id="menu-toggle" class="menu-toggle">
+        <label for="menu-toggle" class="menu-icon" aria-label="Abrir Menu">&#9776;</label>
+
+        <nav class="menu">
+            <ul>
+                <li><a href="geracaodocumentosmedicos.html">Voltar Geração de Documentos</a></li>
+                <li><a href="index.html">Sair</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <div class="container">
+        <h1>Calculadora de Função Renal</h1>
+
+        <div class="form-section">
+            <h2>Dados do Paciente</h2>
+            
+            <label for="peso">Peso (kg):</label>
+            <input type="number" id="peso" placeholder="Ex: 70" step="0.1" required>
+            
+            <label for="creatinina">Creatinina Sérica (mg/dL):</label>
+            <input type="number" id="creatinina" placeholder="Ex: 1.0" step="0.01" required>
+            
+            <label for="idade">Idade (anos):</label>
+            <input type="number" id="idade" placeholder="Ex: 50" step="1" required>
+
+            <label for="sexo">Sexo:</label>
+            <select id="sexo" required>
+                <option value="">Selecione...</option>
+                <option value="masculino">Masculino</option>
+                <option value="feminino">Feminino</option>
+            </select>
+
+            <label for="raca">Raça:</label>
+            <select id="raca" required>
+                <option value="">Selecione...</option>
+                <option value="negra">Negra</option>
+                <option value="nao-negra">Não-negra</option>
+            </select>
+        </div>
+
+        <div class="form-section">
+            <h2>Dados do Coletor</h2>
+            
+            <label for="razaoSocial">Razão Social da Unidade de Saúde:</label>
+            <input type="text" id="razaoSocial" placeholder="Ex: Clínica Bem-Estar Ltda" required>
+
+            <label for="cnpj">CNPJ da Unidade de Saúde:</label>
+            <input type="text" id="cnpj" placeholder="Ex: 00.000.000/0001-00" required>
+            
+            <label for="endereco">Endereço Completo da Unidade de Saúde:</label>
+            <input type="text" id="endereco" placeholder="Ex: Rua das Flores, 123, Centro, Cidade/UF" required>
+
+            <label for="telefone">Telefone da Unidade de Saúde:</label>
+            <input type="text" id="telefone" placeholder="Ex: (99) 99999-9999" required>
+
+            <hr>
+
+            <label for="nomeFuncionario">Nome Completo do Funcionário:</label>
+            <input type="text" id="nomeFuncionario" placeholder="Ex: João da Silva" required>
+
+            <label for="cargo">Cargo do Funcionário:</label>
+            <input type="text" id="cargo" placeholder="Ex: Nutricionista" required>
+
+            <label for="registroProfissional">Registro Profissional:</label>
+            <input type="text" id="registroProfissional" placeholder="Ex: CRN-12345/MG" required>
+        </div>
+
+        <button onclick="calcularClearance()">Calcular Clearance de Creatinina</button>
+
+        <div id="resultado-clearance" style="display: none;">
+            <h3>Resultados do Cálculo</h3>
+            <p><strong>Clearance (Cockcroft-Gault):</strong> <span id="resultado-cockcroft"></span></p>
+            <p><strong>TFG (CKD-EPI):</strong> <span id="resultado-ckd-epi"></span></p>
+            <button onclick="gerarLaudo()" class="laudo-button">Gerar Laudo PDF</button>
+        </div>
+    </div>
+    
+    <script>
+        const { jsPDF } = window.jspdf;
+
+        function calcularClearance() {
+            const peso = parseFloat(document.getElementById('peso').value);
+            const creatinina = parseFloat(document.getElementById('creatinina').value);
+            const idade = parseInt(document.getElementById('idade').value);
+            const sexo = document.getElementById('sexo').value;
+            const raca = document.getElementById('raca').value;
+
+            if (isNaN(peso) || isNaN(creatinina) || isNaN(idade) || peso <= 0 || creatinina <= 0 || idade < 0 || sexo === "" || raca === "") {
+                alert("Por favor, preencha todos os campos com valores válidos.");
+                return;
+            }
+
+            // Cálculo Cockcroft-Gault
+            let clearanceCockcroft;
+            if (sexo === 'masculino') {
+                clearanceCockcroft = ((140 - idade) * peso) / (creatinina * 72);
+            } else {
+                clearanceCockcroft = ((140 - idade) * peso) / (creatinina * 72) * 0.85;
+            }
+
+            // Cálculo CKD-EPI (2009)
+            let k, alpha, tfgCkdEpi;
+            if (sexo === 'feminino') {
+                k = 0.7;
+                alpha = -0.329;
+            } else { // masculino
+                k = 0.9;
+                alpha = -0.411;
+            }
+
+            const minCreat = Math.min(creatinina / k, 1);
+            const maxCreat = Math.max(creatinina / k, 1);
+            tfgCkdEpi = 141 * (minCreat ** alpha) * (maxCreat ** -1.209) * (0.993 ** idade);
+
+            if (sexo === 'feminino') {
+                tfgCkdEpi *= 1.018;
+            }
+            if (raca === 'negra') {
+                tfgCkdEpi *= 1.159;
+            }
+
+            // Exibir resultados
+            document.getElementById('resultado-cockcroft').textContent = `${clearanceCockcroft.toFixed(2)} mL/min`;
+            document.getElementById('resultado-ckd-epi').textContent = `${tfgCkdEpi.toFixed(2)} mL/min/1.73 m²`;
+            document.getElementById('resultado-clearance').style.display = 'block';
+        }
+
+        function gerarLaudo() {
+            if (typeof window.jspdf === 'undefined' || typeof window.jspdf.jsPDF === 'undefined') {
+                alert("A biblioteca jsPDF não foi carregada corretamente. Tente recarregar a página.");
+                return;
+            }
+
+            const razaoSocial = document.getElementById('razaoSocial').value;
+            const cnpj = document.getElementById('cnpj').value;
+            const endereco = document.getElementById('endereco').value;
+            const telefone = document.getElementById('telefone').value;
+            const nomeFuncionario = document.getElementById('nomeFuncionario').value;
+            const cargo = document.getElementById('cargo').value;
+            const registroProfissional = document.getElementById('registroProfissional').value;
+
+            if (!razaoSocial || !cnpj || !endereco || !telefone || !nomeFuncionario || !cargo || !registroProfissional) {
+                alert("Por favor, preencha todos os dados da unidade e do funcionário para gerar o laudo.");
+                return;
+            }
+
+            const doc = new jsPDF();
+            const peso = document.getElementById('peso').value;
+            const creatinina = document.getElementById('creatinina').value;
+            const idade = document.getElementById('idade').value;
+            const sexo = document.getElementById('sexo').value;
+            const raca = document.getElementById('raca').value;
+            const clearanceCockcroft = document.getElementById('resultado-cockcroft').textContent;
+            const tfgCkdEpi = document.getElementById('resultado-ckd-epi').textContent;
+            const dataAtual = new Date().toLocaleDateString('pt-BR');
+
+            // Configurações do PDF
+            doc.setFont('Helvetica', 'bold');
+            doc.setFontSize(22);
+            doc.text("Laudo de Avaliação de Função Renal", 105, 20, null, null, "center");
+            doc.line(20, 25, 190, 25);
+
+            // Informações da Unidade de Saúde
+            doc.setFontSize(14);
+            doc.text("Unidade de Saúde", 20, 40);
+            doc.setFont('Helvetica', 'normal');
+            doc.setFontSize(12);
+            doc.text(`Razão Social: ${razaoSocial}`, 20, 50);
+            doc.text(`CNPJ: ${cnpj}`, 20, 57);
+            doc.text(`Endereço: ${endereco}`, 20, 64);
+            doc.text(`Telefone: ${telefone}`, 20, 71);
+            doc.line(20, 80, 190, 80);
+
+            // Dados do Paciente
+            doc.setFont('Helvetica', 'bold');
+            doc.setFontSize(14);
+            doc.text("Dados do Paciente", 20, 95);
+            doc.setFont('Helvetica', 'normal');
+            doc.setFontSize(12);
+            doc.text(`Idade: ${idade} anos`, 20, 105);
+            doc.text(`Sexo: ${sexo.charAt(0).toUpperCase() + sexo.slice(1)}`, 20, 112);
+            doc.text(`Raça: ${raca.charAt(0).toUpperCase() + raca.slice(1)}`, 20, 119);
+            doc.text(`Peso: ${peso} kg`, 20, 126);
+            doc.text(`Creatinina: ${creatinina} mg/dL`, 20, 133);
+            doc.line(20, 140, 190, 140);
+
+            // Resultado da Avaliação
+            doc.setFont('Helvetica', 'bold');
+            doc.setFontSize(14);
+            doc.text("Resultados do Cálculo", 20, 155);
+            doc.setFont('Helvetica', 'normal');
+            doc.setFontSize(12);
+            doc.text(`Clearance de Creatinina (Cockcroft-Gault): ${clearanceCockcroft}`, 20, 165);
+            doc.text(`TFG (CKD-EPI): ${tfgCkdEpi}`, 20, 172);
+            doc.line(20, 180, 190, 180);
+
+            // Informações do Coletor
+            doc.setFont('Helvetica', 'bold');
+            doc.setFontSize(14);
+            doc.text("Dados do Coletor", 20, 195);
+            doc.setFont('Helvetica', 'normal');
+            doc.setFontSize(12);
+            doc.text(`Nome: ${nomeFuncionario}`, 20, 205);
+            doc.text(`Cargo: ${cargo}`, 20, 212);
+            doc.text(`Registro Profissional: ${registroProfissional}`, 20, 219);
+
+            // Final do Documento
+            doc.line(80, 250, 140, 250);
+            doc.setFontSize(10);
+            doc.text("Assinatura do Profissional", 110, 255, null, null, "center");
+            doc.setFontSize(10);
+            doc.text(`Data do Laudo: ${dataAtual}`, 20, 270);
+            
+            doc.save("laudo-clearance-creatinina.pdf");
+        }
+    </script>
+</body>
+</html>

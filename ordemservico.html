@@ -1,0 +1,673 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gerador de Ordem de Serviço</title>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js" defer></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" defer></script>
+    
+    <style>
+        /* Reset básico e configurações globais */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            /* Cores principais */
+            --primary-color: #004080; /* Azul escuro para navbar */
+            --accent-color: #f39c12; /* Laranja para botões e títulos de OS */
+            --accent-dark-color: #e67e22; /* Laranja mais escuro para hover */
+            --text-color: #333;
+            --light-text-color: #555;
+            --background-color: #f4f4f4;
+            --container-bg-color: #fff;
+            --section-bg-color: #f9f9f9;
+            --border-color: #ccc;
+            --light-border-color: #ddd;
+
+            /* Fontes */
+            --font-family-main: 'Arial', sans-serif;
+            --font-family-document: 'Times New Roman', serif;
+
+            /* Tamanhos de fonte */
+            --font-size-base: 1rem; /* 16px */
+            --font-size-sm: 0.9rem; /* 14.4px */
+            --font-size-md: 1.1rem; /* 17.6px */
+            --font-size-lg: 1.6rem; /* 25.6px - para logo */
+            --font-size-xl: 2em; /* Para ícones */
+            --font-size-h1: 1.8rem; /* Para h1 do container */
+            --font-size-h2: 1.5rem; /* Para h2 do form-section */
+            --font-size-document-base: 12pt; /* Para texto do PDF */
+            --font-size-document-title: 16pt; /* Para título do PDF */
+
+            /* Espaçamentos */
+            --spacing-xs: 8px;
+            --spacing-sm: 10px;
+            --spacing-md: 15px;
+            --spacing-lg: 20px;
+            --spacing-xl: 30px;
+            --spacing-xxl: 40px;
+        }
+
+        /* Body e Layout Geral */
+        body {
+            font-family: var(--font-family-main);
+            line-height: 1.6;
+            margin: 0;
+            padding-top: 80px;
+            background-color: var(--background-color);
+            color: var(--text-color);
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        /* Container principal do formulário */
+        .container {
+            max-width: 800px;
+            width: 95%;
+            margin: var(--spacing-lg) auto;
+            padding: var(--spacing-xl);
+            background-color: var(--container-bg-color);
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            text-align: center;
+            color: var(--accent-dark-color);
+            margin-bottom: var(--spacing-xl);
+            font-size: var(--font-size-h1);
+        }
+
+        /* Seções do Formulário */
+        .form-section {
+            margin-bottom: var(--spacing-lg);
+            padding: var(--spacing-md);
+            border: 1px solid var(--light-border-color);
+            border-radius: 5px;
+            background-color: var(--section-bg-color);
+        }
+
+        .form-section h2 {
+            color: var(--accent-dark-color);
+            margin-top: 0;
+            margin-bottom: var(--spacing-md);
+            border-bottom: 2px solid #eee;
+            padding-bottom: var(--spacing-xs);
+            font-size: var(--font-size-h2);
+        }
+
+        label {
+            display: block;
+            margin-bottom: var(--spacing-xs);
+            font-weight: bold;
+            color: var(--light-text-color);
+            cursor: pointer;
+        }
+
+        input[type="text"],
+        input[type="email"],
+        input[type="date"],
+        input[type="number"],
+        input[type="time"],
+        select,
+        textarea {
+            width: 100%;
+            padding: var(--spacing-sm);
+            margin-bottom: var(--spacing-md);
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            font-size: var(--font-size-base);
+            box-sizing: border-box;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
+        }
+
+        input[type="date"],
+        input[type="time"] {
+            padding: var(--spacing-sm) 10px;
+        }
+
+        input[type="text"]:focus,
+        input[type="email"]:focus,
+        input[type="date"]:focus,
+        input[type="number"]:focus,
+        input[type="time"]:focus,
+        select:focus,
+        textarea:focus {
+            border-color: var(--accent-color);
+            outline: none;
+            box-shadow: 0 0 5px rgba(var(--accent-color), 0.25);
+            outline: 2px solid var(--accent-color);
+            outline-offset: 2px;
+        }
+
+        select {
+            padding-right: var(--spacing-xl);
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%23333' viewBox='0 0 16 16'%3E%3Cpath fill-rule='evenodd' d='M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 10px center;
+            background-size: 16px;
+        }
+
+        button {
+            display: block;
+            width: 100%;
+            padding: var(--spacing-md);
+            background-color: var(--accent-color);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: var(--font-size-md);
+            cursor: pointer;
+            transition: background-color 0.3s ease, transform 0.1s ease;
+            margin-top: var(--spacing-lg);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        button:hover {
+            background-color: var(--accent-dark-color);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+        }
+
+        button:active {
+            transform: translateY(0);
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+        }
+
+        hr {
+            border: 0;
+            height: 1px;
+            background-image: linear-gradient(to right, rgba(0, 0, 0, 0), rgba(0, 0, 0, 0.75), rgba(0, 0, 0, 0));
+            margin: var(--spacing-xl) 0;
+        }
+
+        /* Estilos do Menu de Navegação */
+        .navbar {
+            background-color: var(--primary-color);
+            color: white;
+            padding: var(--spacing-lg) var(--spacing-xl);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            z-index: 1000;
+        }
+
+        .logo p {
+            color: white;
+            font-size: var(--font-size-lg);
+            font-weight: bold;
+        }
+
+        .menu ul {
+            list-style: none;
+            display: flex;
+            gap: 50px;
+        }
+
+        .menu ul li a {
+            color: white;
+            text-decoration: none;
+            font-size: var(--font-size-md);
+            transition: color 0.3s, background-color 0.3s;
+            padding: var(--spacing-xs) 0;
+            display: block;
+        }
+
+        .menu ul li a:hover,
+        .menu ul li a:focus {
+            color: #ffd700;
+            outline: none;
+        }
+
+        .menu-icon {
+            font-size: var(--font-size-xl);
+            display: none;
+            cursor: pointer;
+            color: white;
+            outline: 2px solid transparent;
+            outline-offset: 4px;
+            transition: outline-color 0.3s ease;
+        }
+        .menu-icon:focus {
+            outline-color: #ffd700;
+        }
+
+        .menu-toggle {
+            display: none;
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding-top: 65px;
+            }
+            .navbar {
+                padding: var(--spacing-md) var(--spacing-lg);
+            }
+            .logo p {
+                font-size: 1.4em;
+            }
+            .menu ul {
+                flex-direction: column;
+                position: absolute;
+                top: 65px;
+                left: 0;
+                background-color: var(--primary-color);
+                width: 100%;
+                display: none;
+                box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+                gap: 0;
+                max-height: calc(100vh - 65px);
+                overflow-y: auto;
+            }
+            .menu ul li {
+                padding: var(--spacing-md) var(--spacing-xl);
+                border-top: 1px solid rgba(255, 255, 255, 0.2);
+            }
+            .menu ul li:first-child {
+                border-top: none;
+            }
+            .menu-icon {
+                display: block;
+            }
+            .menu-toggle:checked + .menu-icon + .menu ul {
+                display: flex;
+            }
+            .container {
+                padding: var(--spacing-lg);
+                margin: var(--spacing-lg) auto;
+            }
+            h1 {
+                font-size: 1.5rem;
+                margin-bottom: var(--spacing-lg);
+            }
+            .form-section h2 {
+                font-size: 1.3rem;
+                margin-bottom: var(--spacing-md);
+            }
+            input[type="text"],
+            input[type="email"],
+            input[type="date"],
+            input[type="number"],
+            select,
+            textarea {
+                font-size: var(--font-size-base);
+                padding: var(--spacing-sm);
+            }
+            button {
+                font-size: var(--font-size-base);
+                padding: var(--spacing-sm);
+            }
+        }
+
+        @media (max-width: 480px) {
+            .navbar {
+                padding: var(--spacing-sm) var(--spacing-md);
+            }
+            .logo p {
+                font-size: 1.2em;
+            }
+            .menu ul {
+                top: 55px;
+                max-height: calc(100vh - 55px);
+            }
+            .menu ul li {
+                padding: var(--spacing-md) var(--spacing-lg);
+            }
+            .container {
+                padding: var(--spacing-md);
+                margin: var(--spacing-lg) auto;
+            }
+            h1 {
+                font-size: 1.3rem;
+            }
+            .form-section h2 {
+                font-size: 1.2rem;
+            }
+        }
+
+        /* Estilos para o modelo da Ordem de Serviço (inicialmente oculto - para o PDF) */
+        .service-order-template {
+            display: none;
+            padding: 50px;
+            box-sizing: border-box;
+            width: 210mm;
+            min-height: 297mm;
+            background-color: var(--container-bg-color);
+            font-family: var(--font-family-document);
+            font-size: var(--font-size-document-base);
+            position: relative;
+            color: var(--text-color);
+            line-height: 1.5;
+        }
+
+        .os-header {
+            text-align: center;
+            border-bottom: 2px solid #333;
+            padding-bottom: 10px;
+            margin-bottom: 30px;
+        }
+        .os-header h1 {
+            color: var(--primary-color);
+            font-size: var(--font-size-document-title);
+            margin-bottom: 5px;
+        }
+        .os-header h2 {
+            font-size: 14pt;
+            margin: 0;
+            color: var(--light-text-color);
+        }
+        .os-info {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        .os-info-section {
+            padding: 10px;
+            border: 1px solid var(--border-color);
+            border-radius: 5px;
+        }
+        .os-info-section p {
+            margin: 0;
+            line-height: 1.4;
+        }
+        .os-info-section strong {
+            display: block;
+            margin-bottom: 5px;
+            color: var(--primary-color);
+        }
+        .os-section-title {
+            font-size: 14pt;
+            font-weight: bold;
+            color: var(--primary-color);
+            margin-bottom: 10px;
+        }
+        .os-section-content {
+            padding: 10px;
+            border: 1px solid var(--border-color);
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+        .os-section-content p {
+            white-space: pre-wrap;
+        }
+        .os-footer {
+            margin-top: 50px;
+            border-top: 1px solid #333;
+            padding-top: 20px;
+            display: flex;
+            justify-content: space-between;
+            text-align: center;
+        }
+        .os-footer div {
+            width: 45%;
+        }
+        .os-footer p {
+            margin-top: 5px;
+        }
+        .os-footer hr {
+            border: 0;
+            height: 1px;
+            background-color: #333;
+            margin: 0 auto;
+            width: 80%;
+        }
+        
+    </style>
+</head>
+<body>
+    <header class="navbar">
+        <div class="logo">
+            <p>S. G. D. C. & H.</p>
+        </div>
+
+        <input type="checkbox" id="menu-toggle" class="menu-toggle">
+        <label for="menu-toggle" class="menu-icon" aria-label="Abrir Menu">&#9776;</label>
+
+        <nav class="menu">
+            <ul>
+                <li><a href="geracaodocumentosadm.html">Voltar Geração de Documentos</a></li>
+            <li><a href="index.html">Sair</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <div class="container">
+        <h1>Gerador de Ordem de Serviço de Manutenção</h1>
+
+        <div class="form-section">
+            <h2>Dados da Ordem de Serviço</h2>
+            <label for="osNumero">Número da OS:</label>
+            <input type="text" id="osNumero" placeholder="Ex: OS-2025001" required>
+
+            <label for="osData">Data de Abertura:</label>
+            <input type="date" id="osData" required>
+            
+            <label for="tipoManutencao">Tipo de Manutenção:</label>
+            <select id="tipoManutencao" required>
+                <option value="Corretiva">Corretiva</option>
+                <option value="Preventiva">Preventiva</option>
+                <option value="Predial">Predial</option>
+            </select>
+        </div>
+
+        <hr>
+
+        <div class="form-section">
+            <h2>Dados do Solicitante</h2>
+            <label for="solicitanteNome">Nome Completo:</label>
+            <input type="text" id="solicitanteNome" placeholder="Ex: Ana Paula Ribeiro" required>
+
+            <label for="solicitanteSetor">Setor:</label>
+            <input type="text" id="solicitanteSetor" placeholder="Ex: Setor de Enfermagem" required>
+            
+            <label for="solicitanteContato">Contato (Ramal/Telefone):</label>
+            <input type="text" id="solicitanteContato" placeholder="Ex: Ramal 205 ou (43) 9999-8888">
+        </div>
+
+        <hr>
+
+        <div class="form-section">
+            <h2>Dados do Equipamento/Local</h2>
+            <label for="equipamentoNome">Nome do Equipamento/Local:</label>
+            <input type="text" id="equipamentoNome" placeholder="Ex: Monitor de Sinais Vitais" required>
+
+            <label for="equipamentoModelo">Modelo (Opcional):</label>
+            <input type="text" id="equipamentoModelo" placeholder="Ex: Modelo XYZ">
+            
+            <label for="equipamentoPatrimonio">N° de Patrimônio/Série:</label>
+            <input type="text" id="equipamentoPatrimonio" placeholder="Ex: PAT-12345" required>
+
+            <label for="equipamentoLocalizacao">Localização (Setor, Sala):</label>
+            <input type="text" id="equipamentoLocalizacao" placeholder="Ex: UTI 1 - Sala 3" required>
+        </div>
+
+        <hr>
+
+        <div class="form-section">
+            <h2>Descrição do Problema</h2>
+            <label for="problemaDescricao">Descreva o problema ou a necessidade de manutenção:</label>
+            <textarea id="problemaDescricao" rows="4" placeholder="Ex: O equipamento não está ligando e apresenta ruído incomum."></textarea>
+        </div>
+        
+        <hr>
+
+        <div class="form-section">
+            <h2>Detalhes da Manutenção (Preenchimento posterior)</h2>
+            <label for="tecnicoResponsavel">Técnico Responsável:</label>
+            <input type="text" id="tecnicoResponsavel" placeholder="Ex: Carlos Alberto">
+
+            <label for="dataConclusao">Data de Conclusão:</label>
+            <input type="date" id="dataConclusao">
+            
+            <label for="servicoRealizado">Serviço Realizado:</label>
+            <textarea id="servicoRealizado" rows="4" placeholder="Ex: Troca de placa eletrônica e calibração de sensores."></textarea>
+        </div>
+
+        <button onclick="generatePDF()">Gerar Ordem de Serviço em PDF</button>
+    </div>
+
+    <div id="service-order-template" class="service-order-template">
+        <div class="os-header">
+            <h1>Ordem de Serviço de Manutenção</h1>
+            <p><strong>Clínica/Hospital:</strong> <span id="pdfClinicName">S. G. D. C. & H.</span></p>
+            <p><strong>N° da OS:</strong> <span id="pdfOsNumero"></span></p>
+        </div>
+        
+        <div class="os-info">
+            <div class="os-info-section">
+                <strong>Informações da Solicitação</strong>
+                <p><strong>Data de Abertura:</strong> <span id="pdfOsData"></span></p>
+                <p><strong>Tipo de Manutenção:</strong> <span id="pdfTipoManutencao"></span></p>
+            </div>
+            <div class="os-info-section">
+                <strong>Dados do Solicitante</strong>
+                <p><strong>Nome:</strong> <span id="pdfSolicitanteNome"></span></p>
+                <p><strong>Setor:</strong> <span id="pdfSolicitanteSetor"></span></p>
+                <p><strong>Contato:</strong> <span id="pdfSolicitanteContato"></span></p>
+            </div>
+        </div>
+
+        <h3 class="os-section-title">Dados do Equipamento / Local</h3>
+        <div class="os-section-content">
+            <p><strong>Nome:</strong> <span id="pdfEquipamentoNome"></span></p>
+            <p><strong>Modelo:</strong> <span id="pdfEquipamentoModelo"></span></p>
+            <p><strong>N° Patrimônio/Série:</strong> <span id="pdfEquipamentoPatrimonio"></span></p>
+            <p><strong>Localização:</strong> <span id="pdfEquipamentoLocalizacao"></span></p>
+        </div>
+        
+        <h3 class="os-section-title">Descrição do Problema</h3>
+        <div class="os-section-content">
+            <p id="pdfProblemaDescricao"></p>
+        </div>
+        
+        <h3 class="os-section-title">Serviço Realizado</h3>
+        <div class="os-section-content">
+            <p><strong>Técnico Responsável:</strong> <span id="pdfTecnicoResponsavel"></span></p>
+            <p><strong>Data de Conclusão:</strong> <span id="pdfDataConclusao"></span></p>
+            <p><strong>Descrição do Serviço:</strong> <br><span id="pdfServicoRealizado"></span></p>
+        </div>
+        
+        <div class="os-footer">
+            <div>
+                <hr>
+                <p>Assinatura do Solicitante</p>
+            </div>
+            <div>
+                <hr>
+                <p>Assinatura do Técnico Responsável</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Função para formatar data (dd/mm/aaaa)
+        function formatarData(dataString) {
+            if (!dataString) return '';
+            const [ano, mes, dia] = dataString.split('-');
+            return `${dia}/${mes}/${ano}`;
+        }
+        
+        // Preencher a data atual na abertura da página
+        document.addEventListener('DOMContentLoaded', () => {
+            const today = new Date();
+            const year = today.getFullYear();
+            const month = String(today.getMonth() + 1).padStart(2, '0');
+            const day = String(today.getDate()).padStart(2, '0');
+            document.getElementById('osData').value = `${year}-${month}-${day}`;
+        });
+
+        async function generatePDF() {
+            // 1. Coletar dados do formulário
+            const osNumero = document.getElementById('osNumero').value;
+            const osData = document.getElementById('osData').value;
+            const tipoManutencao = document.getElementById('tipoManutencao').value;
+            const solicitanteNome = document.getElementById('solicitanteNome').value;
+            const solicitanteSetor = document.getElementById('solicitanteSetor').value;
+            const solicitanteContato = document.getElementById('solicitanteContato').value;
+            const equipamentoNome = document.getElementById('equipamentoNome').value;
+            const equipamentoModelo = document.getElementById('equipamentoModelo').value;
+            const equipamentoPatrimonio = document.getElementById('equipamentoPatrimonio').value;
+            const equipamentoLocalizacao = document.getElementById('equipamentoLocalizacao').value;
+            const problemaDescricao = document.getElementById('problemaDescricao').value;
+            const tecnicoResponsavel = document.getElementById('tecnicoResponsavel').value;
+            const dataConclusao = document.getElementById('dataConclusao').value;
+            const servicoRealizado = document.getElementById('servicoRealizado').value;
+
+            // Validação simples
+            if (!osNumero || !osData || !tipoManutencao || !solicitanteNome || !solicitanteSetor || !equipamentoNome || !equipamentoPatrimonio || !equipamentoLocalizacao) {
+                alert("Por favor, preencha todos os campos obrigatórios.");
+                return;
+            }
+
+            // 2. Preencher o modelo da Ordem de Serviço oculto
+            document.getElementById('pdfOsNumero').textContent = osNumero;
+            document.getElementById('pdfOsData').textContent = formatarData(osData);
+            document.getElementById('pdfTipoManutencao').textContent = tipoManutencao;
+            document.getElementById('pdfSolicitanteNome').textContent = solicitanteNome;
+            document.getElementById('pdfSolicitanteSetor').textContent = solicitanteSetor;
+            document.getElementById('pdfSolicitanteContato').textContent = solicitanteContato;
+            document.getElementById('pdfEquipamentoNome').textContent = equipamentoNome;
+            document.getElementById('pdfEquipamentoModelo').textContent = equipamentoModelo || 'Não informado';
+            document.getElementById('pdfEquipamentoPatrimonio').textContent = equipamentoPatrimonio;
+            document.getElementById('pdfEquipamentoLocalizacao').textContent = equipamentoLocalizacao;
+            document.getElementById('pdfProblemaDescricao').textContent = problemaDescricao || 'Não informado';
+            document.getElementById('pdfTecnicoResponsavel').textContent = tecnicoResponsavel || 'Não informado';
+            document.getElementById('pdfDataConclusao').textContent = formatarData(dataConclusao) || 'Não informado';
+            document.getElementById('pdfServicoRealizado').textContent = servicoRealizado || 'Não informado';
+
+            // 3. Gerar o PDF
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF('p', 'mm', 'a4');
+            const element = document.getElementById('service-order-template');
+
+            element.style.display = 'block';
+
+            try {
+                const canvas = await html2canvas(element, {
+                    scale: 2,
+                    useCORS: true,
+                    logging: true
+                });
+
+                const imgData = canvas.toDataURL('image/png');
+                const imgWidth = 210;
+                const pageHeight = 297;
+                const imgHeight = canvas.height * imgWidth / canvas.width;
+                let heightLeft = imgHeight;
+                let position = 0;
+
+                doc.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+                heightLeft -= pageHeight;
+
+                while (heightLeft >= 0) {
+                    position = heightLeft - imgHeight;
+                    doc.addPage();
+                    doc.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+                    heightLeft -= pageHeight;
+                }
+
+                doc.save('Ordem_de_Servico.pdf');
+
+            } catch (error) {
+                console.error("Erro ao gerar o PDF:", error);
+                alert("Ocorreu um erro ao gerar o PDF. Por favor, tente novamente.");
+            } finally {
+                element.style.display = 'none';
+            }
+        }
+    </script>
+</body>
+</html>

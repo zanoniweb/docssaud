@@ -1,0 +1,641 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SISTEMA DE GERAÇÃO DE DOCUMENTOS: Termo de Consentimento</title>
+
+    <!-- Adiciona as bibliotecas para geração de PDF -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js" defer></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" defer></script>
+
+    <style>
+        /* Reset básico e configurações globais */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            /* Cores principais */
+            --primary-color: #004080; /* Azul escuro para navbar */
+            --accent-color: #1e7e34; /* Verde escuro para botões e títulos */
+            --accent-dark-color: #155d28; /* Verde mais escuro para hover */
+            --text-color: #333;
+            --light-text-color: #555;
+            --background-color: #f4f4f4;
+            --container-bg-color: #fff;
+            --section-bg-color: #f9f9f9;
+            --border-color: #ccc;
+            --light-border-color: #ddd;
+
+            /* Fontes */
+            --font-family-main: 'Arial', sans-serif;
+            --font-family-document: 'Times New Roman', serif;
+
+            /* Tamanhos de fonte */
+            --font-size-base: 1rem; /* 16px */
+            --font-size-sm: 0.9rem; /* 14.4px */
+            --font-size-md: 1.1rem; /* 17.6px */
+            --font-size-lg: 1.6rem; /* 25.6px - para logo */
+            --font-size-xl: 2em; /* Para ícones */
+            --font-size-h1: 1.8rem; /* Para h1 do container */
+            --font-size-h2: 1.5rem; /* Para h2 do form-section */
+            --font-size-document-base: 12pt; /* Para texto do PDF */
+            --font-size-document-title: 16pt; /* Para título do PDF */
+        }
+
+        /* Body e Layout Geral - MODIFICADO PARA CENTRALIZAR */
+        body {
+            font-family: var(--font-family-main);
+            line-height: 1.6;
+            margin: 0;
+            padding-top: 80px;
+            background-color: var(--background-color);
+            color: var(--text-color);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center; /* Centraliza o conteúdo horizontalmente */
+        }
+
+        /* Container principal do formulário */
+        .container {
+            max-width: 800px;
+            width: 95%;
+            margin-top: 30px; /* Adicionado um margin-top para espaçamento */
+            margin-bottom: 30px;
+            padding: 40px; /* Aumentado o padding para melhor visualização */
+            background-color: var(--container-bg-color);
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            text-align: center;
+            color: var(--accent-dark-color);
+            margin-bottom: 2rem;
+            font-size: var(--font-size-h1);
+        }
+
+        .form-section {
+            margin-bottom: 20px;
+            padding: 15px;
+            border: 1px solid var(--light-border-color);
+            border-radius: 5px;
+            background-color: var(--section-bg-color);
+        }
+
+        .form-section h2 {
+            color: var(--accent-dark-color);
+            margin-top: 0;
+            margin-bottom: 15px;
+            border-bottom: 2px solid #eee;
+            padding-bottom: 8px;
+            font-size: var(--font-size-h2);
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: var(--light-text-color);
+            cursor: pointer;
+        }
+
+        input[type="text"],
+        input[type="email"],
+        input[type="date"],
+        input[type="number"],
+        input[type="tel"],
+        select,
+        textarea {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 15px;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            font-size: var(--font-size-base);
+            box-sizing: border-box;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
+        }
+
+        input[type="text"]:focus,
+        input[type="email"]:focus,
+        input[type="date"]:focus,
+        input[type="number"]:focus,
+        input[type="tel"]:focus,
+        select:focus,
+        textarea:focus {
+            border-color: var(--accent-color);
+            outline: none;
+            box-shadow: 0 0 5px rgba(var(--accent-color), 0.25);
+            outline: 2px solid var(--accent-color);
+            outline-offset: 2px;
+        }
+
+        select {
+            padding-right: 30px;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%23333' viewBox='0 0 16 16'%3E%3Cpath fill-rule='evenodd' d='M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 10px center;
+            background-size: 16px;
+        }
+
+        button {
+            display: block;
+            width: 100%;
+            padding: 15px;
+            background-color: var(--accent-color);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: var(--font-size-md);
+            cursor: pointer;
+            transition: background-color 0.3s ease, transform 0.1s ease;
+            margin-top: 20px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        button:hover {
+            background-color: var(--accent-dark-color);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+        }
+
+        button:active {
+            transform: translateY(0);
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+        }
+
+        hr {
+            border: 0;
+            height: 1px;
+            background-image: linear-gradient(to right, rgba(0, 0, 0, 0), rgba(0, 0, 0, 0.75), rgba(0, 0, 0, 0));
+            margin: 30px 0;
+        }
+
+        /* Estilos do Menu de Navegação */
+        .navbar {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 20px 30px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            z-index: 1000;
+        }
+
+        .logo p {
+            color: white;
+            font-size: var(--font-size-lg);
+            font-weight: bold;
+        }
+
+        .menu ul {
+            list-style: none;
+            display: flex;
+            gap: 50px;
+        }
+
+        .menu ul li a {
+            color: white;
+            text-decoration: none;
+            font-size: var(--font-size-md);
+            transition: color 0.3s, background-color 0.3s;
+            padding: 8px 0;
+            display: block;
+        }
+
+        .menu ul li a:hover,
+        .menu ul li a:focus {
+            color: #ffd700;
+            outline: none;
+        }
+
+        .menu-icon {
+            font-size: var(--font-size-xl);
+            display: none;
+            cursor: pointer;
+            color: white;
+            outline: 2px solid transparent;
+            outline-offset: 4px;
+            transition: outline-color 0.3s ease;
+        }
+        .menu-icon:focus {
+            outline-color: #ffd700;
+        }
+
+        .menu-toggle {
+            display: none;
+        }
+
+        @media (max-width: 768px) {
+            body { padding-top: 65px; }
+            .navbar { padding: 15px 20px; }
+            .logo p { font-size: 1.4em; }
+            .menu ul {
+                flex-direction: column;
+                position: absolute;
+                top: 65px;
+                left: 0;
+                background-color: var(--primary-color);
+                width: 100%;
+                display: none;
+                box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+                gap: 0;
+                max-height: calc(100vh - 65px);
+                overflow-y: auto;
+            }
+            .menu ul li {
+                padding: 15px 30px;
+                border-top: 1px solid rgba(255, 255, 255, 0.2);
+            }
+            .menu ul li:first-child { border-top: none; }
+            .menu-icon { display: block; }
+            .menu-toggle:checked + .menu-icon + .menu ul { display: flex; }
+            .container { padding: 20px; margin: 20px auto; }
+            h1 { font-size: 1.5rem; margin-bottom: 20px; }
+            .form-section h2 { font-size: 1.3rem; margin-bottom: 15px; }
+            input[type="text"], input[type="email"], input[type="date"], input[type="number"], input[type="tel"], select, textarea { font-size: var(--font-size-base); padding: 10px; }
+            button { font-size: var(--font-size-base); padding: 12px; }
+        }
+
+        @media (max-width: 480px) {
+            .navbar { padding: 10px 15px; }
+            .logo p { font-size: 1.2em; }
+            .menu ul { top: 55px; max-height: calc(100vh - 55px); }
+            .menu ul li { padding: 15px 20px; }
+            .container { padding: 15px; margin: 20px auto; }
+            h1 { font-size: 1.3rem; }
+            .form-section h2 { font-size: 1.2rem; }
+        }
+
+        /* Estilos para o modelo do Termo de Consentimento (inicialmente oculto - para o PDF) */
+        .consent-form-template {
+            display: none;
+            padding: 50px;
+            box-sizing: border-box;
+            width: 210mm;
+            min-height: 297mm;
+            background-color: var(--container-bg-color);
+            font-family: var(--font-family-document);
+            font-size: var(--font-size-document-base);
+            position: relative;
+            color: var(--text-color);
+            line-height: 1.5;
+        }
+        
+        .form-header {
+            text-align: center;
+            padding-bottom: 10px;
+            border-bottom: 1px solid var(--light-border-color);
+            margin-bottom: 30px;
+        }
+        .form-header p {
+            margin: 0;
+            line-height: 1.2;
+        }
+        .form-header strong {
+            font-size: var(--font-size-document-title);
+        }
+
+        .form-title {
+            text-align: center;
+            margin-top: 20px;
+            margin-bottom: 30px;
+            font-size: var(--font-size-document-title);
+            text-transform: uppercase;
+            font-weight: bold;
+            color: var(--accent-color);
+        }
+
+        .form-date {
+            text-align: right;
+            margin-bottom: 20px;
+        }
+
+        .form-body {
+            margin-bottom: 20px;
+            text-align: justify;
+        }
+
+        .signature-section {
+            display: flex;
+            justify-content: space-around;
+            margin-top: 50px;
+            text-align: center;
+        }
+
+        .signature-block {
+            width: 45%;
+        }
+
+        .signature-line {
+            border-top: 1px solid #000;
+            margin-bottom: 5px;
+            margin-top: 20px;
+        }
+        .signature-line-text {
+            font-size: var(--font-size-base);
+            font-weight: bold;
+        }
+        
+        .form-footer {
+            text-align: center;
+            padding-top: 10px;
+            border-top: 1px solid var(--light-border-color);
+            margin-top: 50px;
+        }
+        .form-footer p {
+            margin: 0;
+            line-height: 1.2;
+        }
+    </style>
+</head>
+
+<body>
+    <header class="navbar">
+        <div class="logo">
+            <p>S. G. D. C. & H.</p>
+        </div>
+
+        <input type="checkbox" id="menu-toggle" class="menu-toggle">
+        <label for="menu-toggle" class="menu-icon" aria-label="Abrir Menu">&#9776;</label>
+
+       <nav class="menu">
+        <ul>
+            <li><a href="geracaodocumentosmedicos.html">Voltar Geração de Documentos</a></li>
+            <li><a href="index.html">Sair</a></li>
+        </ul>
+    </nav>
+    </header>
+
+    <div class="container">
+        <h1>Gerador de Termo de Consentimento</h1>
+
+        <div class="form-section">
+            <h2>Dados da Clínica ou Hospital</h2>
+            <label for="clinicNome">Nome da Clínica/Hospital:</label>
+            <input type="text" id="clinicNome" placeholder="Ex: Hospital Central" required>
+
+            <label for="clinicCNPJ">CNPJ:</label>
+            <input type="text" id="clinicCNPJ" placeholder="Ex: 00.000.000/0001-00">
+            
+            <label for="cidadeEstado">Cidade e Estado (Emissão do Termo):</label>
+            <input type="text" id="cidadeEstado" placeholder="Ex: Londrina/PR" required>
+
+            <label for="clinicEndereco">Endereço:</label>
+            <input type="text" id="clinicEndereco" placeholder="Ex: Av. Principal, 1000, Bairro Novo" required>
+
+            <label for="clinicTelefone">Telefone:</label>
+            <input type="tel" id="clinicTelefone" placeholder="Ex: (43) 9999-8888">
+        </div>
+
+        <hr>
+
+        <div class="form-section">
+            <h2>Dados do Profissional Responsável</h2>
+            <label for="profissionalNome">Nome Completo do Profissional:</label>
+            <input type="text" id="profissionalNome" placeholder="Ex: Dr. João da Silva" required>
+
+            <label for="profissionalRegistro">Registro (CRM, COREN, CRO, etc.):</label>
+            <input type="text" id="profissionalRegistro" placeholder="Ex: CRM/SP 123456" required>
+
+            <label for="profissionalEspecialidade">Especialidade (Opcional):</label>
+            <input type="text" id="profissionalEspecialidade" placeholder="Ex: Cirurgião Plástico">
+        </div>
+
+        <hr>
+
+        <div class="form-section">
+            <h2>Dados do Paciente</h2>
+            <label for="pacienteNome">Nome Completo do Paciente:</label>
+            <input type="text" id="pacienteNome" placeholder="Ex: Maria Souza" required>
+
+            <label for="pacienteCPF">CPF do Paciente:</label>
+            <input type="text" id="pacienteCPF" placeholder="Ex: 123.456.789-00" required>
+        </div>
+
+        <hr>
+
+        <div class="form-section">
+            <h2>Informações do Procedimento</h2>
+            <label for="procedimentoNome">Nome do Procedimento:</label>
+            <input type="text" id="procedimentoNome" placeholder="Ex: Aplicação de toxina botulínica" required>
+
+            <label for="procedimentoDescricao">Descrição do Procedimento:</label>
+            <textarea id="procedimentoDescricao" rows="4" placeholder="Descreva de forma clara e detalhada o procedimento, seus objetivos e como será realizado." required></textarea>
+
+            <label for="riscosBeneficios">Riscos, Complicações e Benefícios Esperados:</label>
+            <textarea id="riscosBeneficios" rows="4" placeholder="Liste os possíveis riscos, complicações e os benefícios esperados do procedimento." required></textarea>
+
+            <label for="alternativasTratamento">Alternativas Terapêuticas (se houver):</label>
+            <textarea id="alternativasTratamento" rows="3" placeholder="Descreva outras opções de tratamento disponíveis, se aplicável."></textarea>
+        </div>
+
+        <button onclick="generatePDF()">Gerar Termo em PDF</button>
+    </div>
+
+    <!-- Modelo oculto para geração do PDF -->
+    <div id="consent-form-template" class="consent-form-template">
+        <div class="form-header">
+            <p><strong id="pdfClinicNome"></strong></p>
+            <p id="pdfClinicEndereco"></p>
+            <p>CNPJ: <span id="pdfClinicCNPJ"></span> | Tel: <span id="pdfClinicTelefone"></span></p>
+        </div>
+
+        <h2 class="form-title">TERMO DE CONSENTIMENTO LIVRE E ESCLARECIDO</h2>
+
+        <div class="form-body">
+            <p>Eu, <strong><span id="pdfPacienteNome"></span></strong>, portador(a) do CPF n° <span id="pdfPacienteCPF"></span>, declaro que fui informado(a) e compreendi completamente o procedimento de <span id="pdfProcedimentoNome"></span> a ser realizado em mim.</p>
+            
+            <p><strong>Descrição do Procedimento:</strong></p>
+            <p class="text-justify"><span id="pdfProcedimentoDescricao"></span></p>
+
+            <p><strong>Riscos, Complicações e Benefícios:</strong></p>
+            <p class="text-justify"><span id="pdfRiscosBeneficios"></span></p>
+
+            <p><strong>Alternativas Terapêuticas:</strong></p>
+            <p class="text-justify"><span id="pdfAlternativasTratamento"></span></p>
+
+            <p>
+                Eu tive a oportunidade de discutir o procedimento com o(a) profissional responsável, <span id="pdfProfissionalNome"></span>, e tive todas as minhas perguntas respondidas de forma satisfatória. Estou ciente dos riscos, benefícios, alternativas e que posso retirar meu consentimento a qualquer momento.
+            </p>
+            <p>
+                Pelo presente instrumento, manifesto minha livre e espontânea vontade em submeter-me ao procedimento e assumo, juntamente com o profissional, a responsabilidade pela minha decisão.
+            </p>
+            <p class="form-date" id="pdfDataTermoCidade"></p>
+        </div>
+        
+        <br>
+        <br>
+        <div class="signature-section">
+            <div class="signature-block">
+                <p class="signature-line"></p>
+                <p class="signature-line-text"><strong><span id="pdfPacienteNomeAssinatura"></span></strong></p>
+                <p>Paciente</p>
+            </div>
+            <div class="signature-block">
+                <p class="signature-line"></p>
+                <p class="signature-line-text"><strong><span id="pdfProfissionalNomeAssinatura"></span></strong></p>
+                <p><span id="pdfProfissionalRegistro"></span></p>
+                <p>Profissional Responsável</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Função para formatar data (dd de [mês] de aaaa)
+        function formatarDataExtenso(dataString) {
+            if (!dataString) return '';
+            const date = new Date(dataString + 'T00:00:00');
+            const options = { day: 'numeric', month: 'long', year: 'numeric' };
+            return date.toLocaleDateString('pt-BR', options);
+        }
+
+        // Função para preencher a data atual no campo de data do termo
+        document.addEventListener('DOMContentLoaded', () => {
+            const today = new Date();
+            const year = today.getFullYear();
+            const month = String(today.getMonth() + 1).padStart(2, '0');
+            const day = String(today.getDate()).padStart(2, '0');
+            document.getElementById('cidadeEstado').value = 'LONDRINA/PR';
+        });
+        
+        // Custom modal-like function to replace alert()
+        function showMessage(message) {
+            const modal = document.createElement('div');
+            modal.style.position = 'fixed';
+            modal.style.top = '50%';
+            modal.style.left = '50%';
+            modal.style.transform = 'translate(-50%, -50%)';
+            modal.style.backgroundColor = 'white';
+            modal.style.padding = '30px';
+            modal.style.borderRadius = '8px';
+            modal.style.boxShadow = '0 4px 8px rgba(0,0,0,0.2)';
+            modal.style.zIndex = '10000';
+            modal.style.textAlign = 'center';
+            modal.style.maxWidth = '90%';
+            modal.style.minWidth = '300px';
+            modal.style.fontFamily = 'Arial, sans-serif';
+
+            const p = document.createElement('p');
+            p.textContent = message;
+            p.style.marginBottom = '20px';
+            p.style.fontSize = '1.2rem';
+            modal.appendChild(p);
+
+            const button = document.createElement('button');
+            button.textContent = 'OK';
+            button.style.padding = '10px 20px';
+            button.style.border = 'none';
+            button.style.borderRadius = '5px';
+            button.style.backgroundColor = '#004080';
+            button.style.color = 'white';
+            button.style.cursor = 'pointer';
+            button.style.fontSize = '1rem';
+            button.onclick = () => document.body.removeChild(modal);
+            modal.appendChild(button);
+
+            document.body.appendChild(modal);
+        }
+
+        async function generatePDF() {
+            // 1. Coletar dados do formulário
+            const clinicNome = document.getElementById('clinicNome').value;
+            const clinicCNPJ = document.getElementById('clinicCNPJ').value;
+            const cidadeEstado = document.getElementById('cidadeEstado').value;
+            const clinicEndereco = document.getElementById('clinicEndereco').value;
+            const clinicTelefone = document.getElementById('clinicTelefone').value;
+
+            const profissionalNome = document.getElementById('profissionalNome').value;
+            const profissionalRegistro = document.getElementById('profissionalRegistro').value;
+            const profissionalEspecialidade = document.getElementById('profissionalEspecialidade').value;
+
+            const pacienteNome = document.getElementById('pacienteNome').value;
+            const pacienteCPF = document.getElementById('pacienteCPF').value;
+            
+            const procedimentoNome = document.getElementById('procedimentoNome').value;
+            const procedimentoDescricao = document.getElementById('procedimentoDescricao').value;
+            const riscosBeneficios = document.getElementById('riscosBeneficios').value;
+            const alternativasTratamento = document.getElementById('alternativasTratamento').value;
+
+            // Validação simples
+            if (!clinicNome || !cidadeEstado || !clinicEndereco || !profissionalNome || !profissionalRegistro || !pacienteNome || !pacienteCPF || !procedimentoNome || !procedimentoDescricao || !riscosBeneficios) {
+                showMessage("Por favor, preencha todos os campos obrigatórios.");
+                return;
+            }
+
+            // 2. Preencher o modelo do termo oculto
+            document.getElementById('pdfClinicNome').textContent = clinicNome;
+            document.getElementById('pdfClinicEndereco').textContent = clinicEndereco;
+            document.getElementById('pdfClinicCNPJ').textContent = clinicCNPJ;
+            document.getElementById('pdfClinicTelefone').textContent = clinicTelefone;
+
+            document.getElementById('pdfProfissionalNomeAssinatura').textContent = profissionalNome;
+            document.getElementById('pdfProfissionalRegistro').textContent = profissionalRegistro + (profissionalEspecialidade ? ` - ${profissionalEspecialidade}` : '');
+
+            document.getElementById('pdfPacienteNome').textContent = pacienteNome;
+            document.getElementById('pdfPacienteNomeAssinatura').textContent = pacienteNome;
+            document.getElementById('pdfPacienteCPF').textContent = pacienteCPF;
+
+            document.getElementById('pdfProcedimentoNome').textContent = procedimentoNome;
+            document.getElementById('pdfProcedimentoDescricao').textContent = procedimentoDescricao;
+            document.getElementById('pdfRiscosBeneficios').textContent = riscosBeneficios;
+            document.getElementById('pdfAlternativasTratamento').textContent = alternativasTratamento || "Nenhuma alternativa terapêutica foi discutida ou considerada aplicável neste momento.";
+            
+            const today = new Date();
+            const dataTermoFormatada = formatarDataExtenso(today.toISOString().slice(0, 10));
+            document.getElementById('pdfDataTermoCidade').textContent = `${cidadeEstado}, ${dataTermoFormatada}.`;
+
+            // 3. Gerar o PDF
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF('p', 'mm', 'a4');
+            const element = document.getElementById('consent-form-template');
+
+            element.style.display = 'block';
+
+            try {
+                const canvas = await html2canvas(element, {
+                    scale: 2,
+                    useCORS: true,
+                    logging: true
+                });
+
+                const imgData = canvas.toDataURL('image/png');
+                const imgWidth = 210;
+                const pageHeight = 297;
+                const imgHeight = canvas.height * imgWidth / canvas.width;
+                let heightLeft = imgHeight;
+                let position = 0;
+
+                doc.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+                heightLeft -= pageHeight;
+
+                while (heightLeft >= 0) {
+                    position = heightLeft - imgHeight;
+                    doc.addPage();
+                    doc.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+                    heightLeft -= pageHeight;
+                }
+
+                doc.save('Termo_de_Consentimento.pdf');
+
+            } catch (error) {
+                console.error("Erro ao gerar o PDF:", error);
+                showMessage("Ocorreu um erro ao gerar o PDF. Por favor, tente novamente.");
+            } finally {
+                element.style.display = 'none';
+            }
+        }
+    </script>
+</body>
+</html>

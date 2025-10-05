@@ -1,0 +1,680 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SISTEMA DE GERAÇÃO DE DOCUMENTOS: Pedido de Férias</title>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js" defer></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" defer></script>
+
+    <style>
+        /* Reset básico e configurações globais */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            /* Cores principais */
+            --primary-color: #004080; /* Azul escuro para navbar */
+            --accent-color: #007bff; /* Azul para botões e títulos */
+            --accent-dark-color: #0056b3; /* Azul mais escuro para hover */
+            --text-color: #333;
+            --light-text-color: #555;
+            --background-color: #f4f4f4;
+            --container-bg-color: #fff;
+            --section-bg-color: #f9f9f9;
+            --border-color: #ccc;
+            --light-border-color: #ddd;
+
+            /* Fontes */
+            --font-family-main: 'Arial', sans-serif;
+            --font-family-document: 'Times New Roman', serif;
+
+            /* Tamanhos de fonte */
+            --font-size-base: 1rem; /* 16px */
+            --font-size-sm: 0.9rem; /* 14.4px */
+            --font-size-md: 1.1rem; /* 17.6px */
+            --font-size-lg: 1.6rem; /* 25.6px - para logo */
+            --font-size-xl: 2em; /* Para ícones */
+            --font-size-h1: 1.8rem; /* Para h1 do container */
+            --font-size-h2: 1.5rem; /* Para h2 do form-section */
+            --font-size-notification-title: 1.8rem; /* Para título do PDF */
+            --font-size-document-base: 12pt; /* Para texto do PDF */
+            --font-size-document-title: 16pt; /* Para título do PDF */
+
+            /* Espaçamentos */
+            --spacing-xs: 8px;
+            --spacing-sm: 10px;
+            --spacing-md: 15px;
+            --spacing-lg: 20px;
+            --spacing-xl: 30px;
+            --spacing-xxl: 40px;
+        }
+
+        /* Body e Layout Geral */
+        body {
+            font-family: var(--font-family-main);
+            line-height: 1.6;
+            margin: 0;
+            padding-top: 80px;
+            background-color: var(--background-color);
+            color: var(--text-color);
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        /* Container principal do formulário */
+        .container {
+            max-width: 900px;
+            width: 95%;
+            margin: var(--spacing-lg) auto;
+            padding: var(--spacing-xl);
+            background-color: var(--container-bg-color);
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            text-align: center;
+            color: var(--accent-dark-color);
+            margin-bottom: var(--spacing-xl);
+            font-size: var(--font-size-h1);
+        }
+
+        /* Seções do Formulário */
+        .form-section {
+            margin-bottom: var(--spacing-lg);
+            padding: var(--spacing-md);
+            border: 1px solid var(--light-border-color);
+            border-radius: 5px;
+            background-color: var(--section-bg-color);
+        }
+
+        .form-section h2 {
+            color: var(--accent-dark-color);
+            margin-top: 0;
+            margin-bottom: var(--spacing-md);
+            border-bottom: 2px solid #eee;
+            padding-bottom: var(--spacing-xs);
+            font-size: var(--font-size-h2);
+        }
+
+        .form-group {
+            margin-bottom: var(--spacing-md);
+        }
+
+        label {
+            display: block;
+            margin-bottom: var(--spacing-xs);
+            font-weight: bold;
+            color: var(--light-text-color);
+            cursor: pointer;
+        }
+
+        input[type="text"],
+        input[type="email"],
+        input[type="date"],
+        input[type="tel"],
+        input[type="number"],
+        select,
+        textarea {
+            width: 100%;
+            padding: var(--spacing-sm);
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            font-size: var(--font-size-base);
+            box-sizing: border-box;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
+        }
+        
+        .row {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+        .row > div, .row > .form-group {
+            flex: 1;
+            min-width: 250px;
+        }
+        
+        /* AQUI ESTÁ A CORREÇÃO PRINCIPAL: flex-grow: 1 para garantir o preenchimento e manter a responsividade */
+        @media (min-width: 500px) {
+            .row > div, .row > .form-group {
+                flex-basis: calc(50% - 10px); /* Ajusta para 2 colunas com espaçamento */
+                flex-grow: 1;
+            }
+        }
+        @media (max-width: 499px) {
+            .row > div, .row > .form-group {
+                flex-basis: 100%; /* Uma única coluna em telas menores */
+            }
+        }
+        
+        input[type="text"]:focus,
+        input[type="email"]:focus,
+        input[type="date"]:focus,
+        input[type="tel"]:focus,
+        input[type="number"]:focus,
+        select:focus,
+        textarea:focus {
+            border-color: var(--accent-color);
+            outline: none;
+            box-shadow: 0 0 5px rgba(var(--accent-color), 0.25);
+            outline: 2px solid var(--accent-color);
+            outline-offset: 2px;
+        }
+
+        select {
+            padding-right: var(--spacing-xl);
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%23333' viewBox='0 0 16 16'%3E%3Cpath fill-rule='evenodd' d='M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 10px center;
+            background-size: 16px;
+        }
+
+        button {
+            display: block;
+            width: 100%;
+            padding: var(--spacing-md);
+            background-color: var(--accent-color);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: var(--font-size-md);
+            cursor: pointer;
+            transition: background-color 0.3s ease, transform 0.1s ease;
+            margin-top: var(--spacing-lg);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        button:hover {
+            background-color: var(--accent-dark-color);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+        }
+
+        button:active {
+            transform: translateY(0);
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+        }
+
+        hr {
+            border: 0;
+            height: 1px;
+            background-image: linear-gradient(to right, rgba(0, 0, 0, 0), rgba(0, 0, 0, 0.75), rgba(0, 0, 0, 0));
+            margin: var(--spacing-xl) 0;
+        }
+
+        /* Oculta elementos que não devem ser visíveis */
+        .hidden {
+            display: none;
+        }
+
+        /* Estilos do Menu de Navegação (mantidos) */
+        .navbar {
+            background-color: var(--primary-color);
+            color: white;
+            padding: var(--spacing-lg) var(--spacing-xl);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            z-index: 1000;
+        }
+
+        .logo p {
+            color: white;
+            font-size: var(--font-size-lg);
+            font-weight: bold;
+        }
+
+        .menu ul {
+            list-style: none;
+            display: flex;
+            gap: 50px;
+        }
+
+        .menu ul li a {
+            color: white;
+            text-decoration: none;
+            font-size: var(--font-size-md);
+            transition: color 0.3s, background-color 0.3s;
+            padding: var(--spacing-xs) 0;
+            display: block;
+        }
+
+        .menu ul li a:hover,
+        .menu ul li a:focus {
+            color: #ffd700;
+            outline: none;
+        }
+
+        .menu-icon {
+            font-size: var(--font-size-xl);
+            display: none;
+            cursor: pointer;
+            color: white;
+            outline: 2px solid transparent;
+            outline-offset: 4px;
+            transition: outline-color 0.3s ease;
+        }
+        .menu-icon:focus {
+            outline-color: #ffd700;
+        }
+
+        .menu-toggle {
+            display: none;
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding-top: 65px;
+            }
+            .navbar {
+                padding: var(--spacing-md) var(--spacing-lg);
+            }
+            .logo p {
+                font-size: 1.4em;
+            }
+            .menu ul {
+                flex-direction: column;
+                position: absolute;
+                top: 65px;
+                left: 0;
+                background-color: var(--primary-color);
+                width: 100%;
+                display: none;
+                box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+                gap: 0;
+                max-height: calc(100vh - 65px);
+                overflow-y: auto;
+            }
+            .menu ul li {
+                padding: var(--spacing-md) var(--spacing-xl);
+                border-top: 1px solid rgba(255, 255, 255, 0.2);
+            }
+            .menu ul li:first-child {
+                border-top: none;
+            }
+            .menu-icon {
+                display: block;
+            }
+            .menu-toggle:checked + .menu-icon + .menu ul {
+                display: flex;
+            }
+            .container {
+                padding: var(--spacing-lg);
+                margin: var(--spacing-lg) auto;
+            }
+            h1 {
+                font-size: 1.5rem;
+                margin-bottom: var(--spacing-lg);
+            }
+            .form-section h2 {
+                font-size: 1.3rem;
+                margin-bottom: var(--spacing-md);
+            }
+            input[type="text"],
+            input[type="email"],
+            input[type="date"],
+            input[type="number"],
+            input[type="tel"],
+            select,
+            textarea {
+                font-size: var(--font-size-base);
+                padding: var(--spacing-sm);
+            }
+            button {
+                font-size: var(--font-size-base);
+                padding: var(--spacing-sm);
+            }
+        }
+
+        @media (max-width: 480px) {
+            .navbar {
+                padding: var(--spacing-sm) var(--spacing-md);
+            }
+            .logo p {
+                font-size: 1.2em;
+            }
+            .menu ul {
+                top: 55px;
+                max-height: calc(100vh - 55px);
+            }
+            .menu ul li {
+                padding: var(--spacing-md) var(--spacing-lg);
+            }
+            .container {
+                padding: var(--spacing-md);
+                margin: var(--spacing-lg) auto;
+            }
+            h1 {
+                font-size: 1.3rem;
+            }
+            .form-section h2 {
+                font-size: 1.2rem;
+            }
+        }
+
+        /* Estilos para o modelo do Pedido de Férias (inicialmente oculto - para o PDF) */
+        .vacation-template {
+            display: none;
+            padding: 50px;
+            box-sizing: border-box;
+            width: 210mm;
+            min-height: 297mm;
+            background-color: var(--container-bg-color);
+            font-family: var(--font-family-document);
+            font-size: var(--font-size-document-base);
+            position: relative;
+            color: var(--text-color);
+            line-height: 1.5;
+        }
+
+        .vacation-company-header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .vacation-company-header h2 {
+            margin: 0; 
+            font-size: 14pt;
+        }
+        .vacation-company-header p {
+            margin: 0; 
+            font-size: 10pt;
+        }
+
+        .vacation-header {
+            text-align: center;
+            padding-bottom: 10px;
+            margin-bottom: 30px;
+        }
+        .vacation-header strong {
+            font-size: var(--font-size-document-title);
+        }
+        .vacation-header p {
+            margin: 0;
+            line-height: 1.2;
+        }
+        .vacation-body p, .vacation-body ul {
+            margin-bottom: 15px;
+            text-align: justify;
+        }
+        .vacation-body ul {
+            padding-left: 20px;
+            list-style-type: disc;
+        }
+
+        .vacation-title {
+            text-align: center;
+            margin-top: 20px;
+            margin-bottom: 30px;
+            font-size: var(--font-size-document-title);
+            text-transform: uppercase;
+            font-weight: bold;
+            color: var(--accent-color);
+        }
+
+        .report-section-title {
+            font-size: 14pt;
+            margin-top: 20px;
+            margin-bottom: 10px;
+        }
+
+        .vacation-signature {
+            margin-top: 50px;
+            text-align: center;
+            display: flex;
+            justify-content: space-around;
+            gap: 20px;
+        }
+
+        .signature-line {
+            display: inline-block;
+            width: 300px;
+            border-top: 1px solid #000;
+            margin-top: 50px;
+            padding-top: 5px;
+            text-align: center;
+        }
+    </style>
+</head>
+
+<body>
+    <header class="navbar">
+        <div class="logo">
+            <p>S. G. D. C. & H.</p>
+        </div>
+
+        <input type="checkbox" id="menu-toggle" class="menu-toggle">
+        <label for="menu-toggle" class="menu-icon" aria-label="Abrir Menu">&#9776;</label>
+
+        <nav class="menu">
+        <ul>
+            <li><a href="geracaodocumentosrh.html">Voltar Geração de Documentos</a></li>
+            <li><a href="index.html">Sair</a></li>
+        </ul>
+    </nav>
+    </header>
+
+    <div class="container">
+        <h1>Gerador de Pedido de Férias 🏖️</h1>
+
+        <div class="form-section">
+            <h2>Dados da Empresa</h2>
+            <div class="row">
+                <div class="form-group">
+                    <label for="empresaNome">Nome da Empresa:</label>
+                    <input type="text" id="empresaNome" placeholder="Ex: Hospital Central S.A." required>
+                </div>
+                <div class="form-group">
+                    <label for="empresaCNPJ">CNPJ:</label>
+                    <input type="text" id="empresaCNPJ" placeholder="Ex: 00.000.000/0001-00" required>
+                </div>
+            </div>
+            <div class="row">
+                <div class="form-group">
+                    <label for="empresaEndereco">Endereço:</label>
+                    <input type="text" id="empresaEndereco" placeholder="Ex: Av. Principal, 123 - Centro" required>
+                </div>
+                <div class="form-group">
+                    <label for="empresaTelefone">Telefone:</label>
+                    <input type="tel" id="empresaTelefone" placeholder="Ex: (11) 98765-4321" required>
+                </div>
+            </div>
+        </div>
+
+        <hr>
+
+        <div class="form-section">
+            <h2>Dados do(a) Colaborador(a)</h2>
+            <div class="row">
+                <div class="form-group">
+                    <label for="colaboradorNome">Nome Completo:</label>
+                    <input type="text" id="colaboradorNome" placeholder="Ex: João da Silva Santos" required>
+                </div>
+                <div class="form-group">
+                    <label for="colaboradorCPF">CPF:</label>
+                    <input type="text" id="colaboradorCPF" placeholder="Ex: 123.456.789-00" required>
+                </div>
+            </div>
+            <div class="row">
+                <div class="form-group">
+                    <label for="colaboradorCargo">Cargo:</label>
+                    <input type="text" id="colaboradorCargo" placeholder="Ex: Enfermeiro(a)" required>
+                </div>
+                <div class="form-group">
+                    <label for="colaboradorDepartamento">Departamento:</label>
+                    <input type="text" id="colaboradorDepartamento" placeholder="Ex: Enfermagem" required>
+                </div>
+            </div>
+        </div>
+
+        <hr>
+
+        <div class="form-section">
+            <h2>Detalhes das Férias</h2>
+            <div class="row">
+                <div class="form-group">
+                    <label for="dataInicioFerias">Data de Início das Férias:</label>
+                    <input type="date" id="dataInicioFerias" required>
+                </div>
+                <div class="form-group">
+                    <label for="dataTerminoFerias">Data de Término das Férias:</label>
+                    <input type="date" id="dataTerminoFerias" required>
+                </div>
+            </div>
+            <div class="row">
+                <div class="form-group">
+                    <label for="periodoAquisitivo">Período Aquisitivo (ex: 2023-2024):</label>
+                    <input type="text" id="periodoAquisitivo" placeholder="Ex: 01/01/2023 a 31/12/2023" required>
+                </div>
+            </div>
+            <div class="row">
+                <div class="form-group">
+                    <label for="localAssinatura">Cidade/Estado da Assinatura:</label>
+                    <input type="text" id="localAssinatura" placeholder="Ex: São Paulo/SP" required>
+                </div>
+            </div>
+            <div class="form-group">
+                <label for="observacoes">Observações Adicionais:</label>
+                <textarea id="observacoes" rows="3" placeholder="Ex: Preferência por receber o adiantamento do 13º salário."></textarea>
+            </div>
+        </div>
+
+        <button onclick="generatePDF()">Gerar Pedido de Férias em PDF</button>
+    </div>
+
+    <div id="vacation-template" class="vacation-template">
+        <div class="vacation-company-header">
+            <h2 id="pdfEmpresaNome"></h2>
+            <p id="pdfEmpresaEndereco"></p>
+            <p id="pdfEmpresaCNPJ"></p>
+            <p id="pdfEmpresaTelefone"></p>
+        </div>
+
+        <div class="vacation-header">
+            <strong>PEDIDO DE FÉRIAS</strong>
+        </div>
+        <div class="vacation-body">
+            <p><strong>À Gerência de Recursos Humanos</strong></p>
+            <p>Prezados(as) Senhores(as),</p>
+            <p>Eu, <strong><span id="pdfColaboradorNome"></span></strong>, portador(a) do CPF nº <strong><span id="pdfColaboradorCPF"></span></strong>, exercente do cargo de <strong><span id="pdfColaboradorCargo"></span></strong> no setor de <strong><span id="pdfColaboradorDepartamento"></span></strong>, venho por meio desta solicitar a concessão de minhas férias relativas ao período aquisitivo de <strong><span id="pdfPeriodoAquisitivo"></span></strong>.</p>
+            <p>O período solicitado para o gozo das férias é de <strong><span id="pdfDataInicioFerias"></span></strong> a <strong><span id="pdfDataTerminoFerias"></span></strong>, totalizando <strong><span id="pdfDiasTotais"></span> dias</strong> de descanso.</p>
+            <p>Agradeço a atenção e aguardo a aprovação para o devido planejamento.</p>
+            <p id="pdfObservacoes"></p>
+            <p id="pdfLocalData"></p>
+        </div>
+        <div class="vacation-signature">
+            <div class="signature-line">
+                <p><strong><span id="pdfColaboradorNomeAssinatura"></span></strong></p>
+                <p><small>Assinatura do(a) Colaborador(a)</small></p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function formatarDataExtenso(dataString) {
+            if (!dataString) return '';
+            const date = new Date(dataString + 'T00:00:00');
+            const options = { day: 'numeric', month: 'long', year: 'numeric' };
+            return date.toLocaleDateString('pt-BR', options);
+        }
+        
+        function calcularDias(dataInicio, dataTermino) {
+            const data1 = new Date(dataInicio);
+            const data2 = new Date(dataTermino);
+            const diffTime = Math.abs(data2 - data1);
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1; // +1 para incluir o dia de término
+            return diffDays;
+        }
+
+        async function generatePDF() {
+            // 1. Coletar dados do formulário (agora incluindo os da empresa e a cidade)
+            const empresaNome = document.getElementById('empresaNome').value;
+            const empresaCNPJ = document.getElementById('empresaCNPJ').value;
+            const empresaEndereco = document.getElementById('empresaEndereco').value;
+            const empresaTelefone = document.getElementById('empresaTelefone').value;
+            const colaboradorNome = document.getElementById('colaboradorNome').value;
+            const colaboradorCPF = document.getElementById('colaboradorCPF').value;
+            const colaboradorCargo = document.getElementById('colaboradorCargo').value;
+            const colaboradorDepartamento = document.getElementById('colaboradorDepartamento').value;
+            const dataInicioFerias = document.getElementById('dataInicioFerias').value;
+            const dataTerminoFerias = document.getElementById('dataTerminoFerias').value;
+            const periodoAquisitivo = document.getElementById('periodoAquisitivo').value;
+            const localAssinatura = document.getElementById('localAssinatura').value;
+            const observacoes = document.getElementById('observacoes').value;
+            
+            // Validação simples
+            if (!empresaNome || !empresaCNPJ || !empresaEndereco || !empresaTelefone || !colaboradorNome || !colaboradorCPF || !colaboradorCargo || !colaboradorDepartamento || !dataInicioFerias || !dataTerminoFerias || !periodoAquisitivo || !localAssinatura) {
+                alert("Por favor, preencha todos os campos obrigatórios.");
+                return;
+            }
+
+            // 2. Preencher o modelo do pedido de férias oculto (com os novos dados da empresa)
+            const dataInicioFormatada = formatarDataExtenso(dataInicioFerias);
+            const dataTerminoFormatada = formatarDataExtenso(dataTerminoFerias);
+            const diasTotais = calcularDias(dataInicioFerias, dataTerminoFerias);
+            const dataAtual = new Date();
+            const localData = `${localAssinatura}, ${formatarDataExtenso(dataAtual.toISOString().slice(0, 10))}.`;
+
+            document.getElementById('pdfEmpresaNome').textContent = empresaNome;
+            document.getElementById('pdfEmpresaEndereco').textContent = empresaEndereco;
+            document.getElementById('pdfEmpresaCNPJ').textContent = `CNPJ: ${empresaCNPJ}`;
+            document.getElementById('pdfEmpresaTelefone').textContent = `Telefone: ${empresaTelefone}`;
+
+            document.getElementById('pdfColaboradorNome').textContent = colaboradorNome;
+            document.getElementById('pdfColaboradorCPF').textContent = colaboradorCPF;
+            document.getElementById('pdfColaboradorCargo').textContent = colaboradorCargo;
+            document.getElementById('pdfColaboradorDepartamento').textContent = colaboradorDepartamento;
+            document.getElementById('pdfPeriodoAquisitivo').textContent = periodoAquisitivo;
+            document.getElementById('pdfDataInicioFerias').textContent = dataInicioFormatada;
+            document.getElementById('pdfDataTerminoFerias').textContent = dataTerminoFormatada;
+            document.getElementById('pdfDiasTotais').textContent = diasTotais;
+            
+            document.getElementById('pdfObservacoes').textContent = observacoes ? `Observações: ${observacoes}` : '';
+            document.getElementById('pdfLocalData').textContent = localData;
+            document.getElementById('pdfColaboradorNomeAssinatura').textContent = colaboradorNome;
+
+            // 3. Gerar e baixar o PDF
+            const template = document.getElementById('vacation-template');
+            template.style.display = 'block'; // Mostra o template para o html2canvas
+            
+            const canvas = await html2canvas(template, {
+                scale: 2, // Aumenta a qualidade da imagem
+            });
+            
+            const imgData = canvas.toDataURL('image/jpeg', 1.0);
+            const { jsPDF } = window.jspdf;
+            const pdf = new jsPDF('p', 'mm', 'a4');
+            const imgWidth = 210;
+            const pageHeight = 297;
+            const imgHeight = (canvas.height * imgWidth) / canvas.width;
+            let heightLeft = imgHeight;
+            let position = 0;
+            
+            pdf.addImage(imgData, 'JPEG', 0, position, imgWidth, imgHeight);
+            heightLeft -= pageHeight;
+
+            while (heightLeft >= 0) {
+                position = heightLeft - imgHeight;
+                pdf.addPage();
+                pdf.addImage(imgData, 'JPEG', 0, position, imgWidth, imgHeight);
+                heightLeft -= pageHeight;
+            }
+            
+            pdf.save(`Pedido_de_Ferias_${colaboradorNome.replace(/\s/g, '_')}.pdf`);
+            template.style.display = 'none'; // Oculta o template novamente
+        }
+    </script>
+</body>
+</html>

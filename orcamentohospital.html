@@ -1,0 +1,822 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SISTEMA DE GERAÇÃO DE DOCUMENTOS: Orçamento</title>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js" defer></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" defer></script>
+
+    <style>
+        /* Reset básico e configurações globais */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            /* Cores principais */
+            --primary-color: #004080; /* Azul escuro para navbar */
+            --accent-color: #007bff; /* Azul para botões e títulos de orçamento */
+            --accent-dark-color: #0056b3; /* Azul mais escuro para hover */
+            --text-color: #333;
+            --light-text-color: #555;
+            --background-color: #f4f4f4;
+            --container-bg-color: #fff;
+            --section-bg-color: #f9f9f9;
+            --border-color: #ccc;
+            --light-border-color: #ddd;
+
+            /* Fontes */
+            --font-family-main: 'Arial', sans-serif;
+            --font-family-document: 'Times New Roman', serif;
+
+            /* Tamanhos de fonte */
+            --font-size-base: 1rem; /* 16px */
+            --font-size-sm: 0.9rem; /* 14.4px */
+            --font-size-md: 1.1rem; /* 17.6px */
+            --font-size-lg: 1.6rem; /* 25.6px - para logo */
+            --font-size-xl: 2em; /* Para ícones */
+            --font-size-h1: 1.8rem; /* Para h1 do container */
+            --font-size-h2: 1.5rem; /* Para h2 do form-section */
+            --font-size-notification-title: 1.8rem; /* Para título do PDF */
+            --font-size-document-base: 12pt; /* Para texto do PDF */
+            --font-size-document-title: 16pt; /* Para título do PDF */
+
+            /* Espaçamentos */
+            --spacing-xs: 8px;
+            --spacing-sm: 10px;
+            --spacing-md: 15px;
+            --spacing-lg: 20px;
+            --spacing-xl: 30px;
+            --spacing-xxl: 40px;
+        }
+
+        /* Body e Layout Geral */
+        body {
+            font-family: var(--font-family-main);
+            line-height: 1.6;
+            margin: 0;
+            padding-top: 80px;
+            background-color: var(--background-color);
+            color: var(--text-color);
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        /* Container principal do formulário */
+        .container {
+            max-width: 800px;
+            width: 95%;
+            margin: var(--spacing-lg) auto;
+            padding: var(--spacing-xl);
+            background-color: var(--container-bg-color);
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            text-align: center;
+            color: var(--accent-dark-color);
+            margin-bottom: var(--spacing-xl);
+            font-size: var(--font-size-h1);
+        }
+
+        /* Seções do Formulário */
+        .form-section {
+            margin-bottom: var(--spacing-lg);
+            padding: var(--spacing-md);
+            border: 1px solid var(--light-border-color);
+            border-radius: 5px;
+            background-color: var(--section-bg-color);
+        }
+
+        .form-section h2 {
+            color: var(--accent-dark-color);
+            margin-top: 0;
+            margin-bottom: var(--spacing-md);
+            border-bottom: 2px solid #eee;
+            padding-bottom: var(--spacing-xs);
+            font-size: var(--font-size-h2);
+        }
+
+        label {
+            display: block;
+            margin-bottom: var(--spacing-xs);
+            font-weight: bold;
+            color: var(--light-text-color);
+            cursor: pointer;
+        }
+
+        input[type="text"],
+        input[type="email"],
+        input[type="date"],
+        input[type="number"],
+        input[type="time"],
+        select,
+        textarea {
+            width: 100%;
+            padding: var(--spacing-sm);
+            margin-bottom: var(--spacing-md);
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            font-size: var(--font-size-base);
+            box-sizing: border-box;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
+        }
+
+        input[type="date"],
+        input[type="time"] {
+            padding: var(--spacing-sm) 10px;
+        }
+
+        input[type="text"]:focus,
+        input[type="email"]:focus,
+        input[type="date"]:focus,
+        input[type="number"]:focus,
+        input[type="time"]:focus,
+        select:focus,
+        textarea:focus {
+            border-color: var(--accent-color);
+            outline: none;
+            box-shadow: 0 0 5px rgba(var(--accent-color), 0.25);
+            outline: 2px solid var(--accent-color);
+            outline-offset: 2px;
+        }
+
+        select {
+            padding-right: var(--spacing-xl);
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%23333' viewBox='0 0 16 16'%3E%3Cpath fill-rule='evenodd' d='M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 10px center;
+            background-size: 16px;
+        }
+
+        button {
+            display: block;
+            width: 100%;
+            padding: var(--spacing-md);
+            background-color: var(--accent-color);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: var(--font-size-md);
+            cursor: pointer;
+            transition: background-color 0.3s ease, transform 0.1s ease;
+            margin-top: var(--spacing-lg);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+        
+        button.add-service-btn {
+            background-color: #28a745;
+        }
+
+        button:hover {
+            background-color: var(--accent-dark-color);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+        }
+        
+        button.add-service-btn:hover {
+            background-color: #218838;
+        }
+
+        button:active {
+            transform: translateY(0);
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+        }
+
+        hr {
+            border: 0;
+            height: 1px;
+            background-image: linear-gradient(to right, rgba(0, 0, 0, 0), rgba(0, 0, 0, 0.75), rgba(0, 0, 0, 0));
+            margin: var(--spacing-xl) 0;
+        }
+
+        /* Estilos do Menu de Navegação */
+        .navbar {
+            background-color: var(--primary-color);
+            color: white;
+            padding: var(--spacing-lg) var(--spacing-xl);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            z-index: 1000;
+        }
+
+        .logo p {
+            color: white;
+            font-size: var(--font-size-lg);
+            font-weight: bold;
+        }
+
+        .menu ul {
+            list-style: none;
+            display: flex;
+            gap: 50px;
+        }
+
+        .menu ul li a {
+            color: white;
+            text-decoration: none;
+            font-size: var(--font-size-md);
+            transition: color 0.3s, background-color 0.3s;
+            padding: var(--spacing-xs) 0;
+            display: block;
+        }
+
+        .menu ul li a:hover,
+        .menu ul li a:focus {
+            color: #ffd700;
+            outline: none;
+        }
+
+        .menu-icon {
+            font-size: var(--font-size-xl);
+            display: none;
+            cursor: pointer;
+            color: white;
+            outline: 2px solid transparent;
+            outline-offset: 4px;
+            transition: outline-color 0.3s ease;
+        }
+        .menu-icon:focus {
+            outline-color: #ffd700;
+        }
+
+        .menu-toggle {
+            display: none;
+        }
+        
+        /* Tabela de serviços */
+        .service-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        
+        .service-table th, .service-table td {
+            border: 1px solid var(--light-border-color);
+            padding: 8px;
+            text-align: left;
+        }
+        
+        .service-table th {
+            background-color: var(--accent-dark-color);
+            color: white;
+        }
+        
+        .service-table td.total {
+            font-weight: bold;
+            text-align: right;
+            background-color: #e9ecef;
+        }
+        
+        .service-input-group {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap; /* Adicionado para responsividade */
+        }
+        
+        .service-input-group input {
+            margin-bottom: 0;
+        }
+        
+        .service-input-group input:first-child {
+            flex-grow: 2;
+        }
+        
+        .service-input-group input:last-child {
+            flex-grow: 1;
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding-top: 65px;
+            }
+            .navbar {
+                padding: var(--spacing-md) var(--spacing-lg);
+            }
+            .logo p {
+                font-size: 1.4em;
+            }
+            .menu ul {
+                flex-direction: column;
+                position: absolute;
+                top: 65px;
+                left: 0;
+                background-color: var(--primary-color);
+                width: 100%;
+                display: none;
+                box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+                gap: 0;
+                max-height: calc(100vh - 65px);
+                overflow-y: auto;
+            }
+            .menu ul li {
+                padding: var(--spacing-md) var(--spacing-xl);
+                border-top: 1px solid rgba(255, 255, 255, 0.2);
+            }
+            .menu ul li:first-child {
+                border-top: none;
+            }
+            .menu-icon {
+                display: block;
+            }
+            .menu-toggle:checked + .menu-icon + .menu ul {
+                display: flex;
+            }
+            .container {
+                padding: var(--spacing-lg);
+                margin: var(--spacing-lg) auto;
+            }
+            h1 {
+                font-size: 1.5rem;
+                margin-bottom: var(--spacing-lg);
+            }
+            .form-section h2 {
+                font-size: 1.3rem;
+                margin-bottom: var(--spacing-md);
+            }
+            input[type="text"],
+            input[type="email"],
+            input[type="date"],
+            input[type="number"],
+            select,
+            textarea {
+                font-size: var(--font-size-base);
+                padding: var(--spacing-sm);
+            }
+            button {
+                font-size: var(--font-size-base);
+                padding: var(--spacing-sm);
+            }
+            .service-input-group {
+                flex-direction: column;
+                gap: 5px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .navbar {
+                padding: var(--spacing-sm) var(--spacing-md);
+            }
+            .logo p {
+                font-size: 1.2em;
+            }
+            .menu ul {
+                top: 55px;
+                max-height: calc(100vh - 55px);
+            }
+            .menu ul li {
+                padding: var(--spacing-md) var(--spacing-lg);
+            }
+            .container {
+                padding: var(--spacing-md);
+                margin: var(--spacing-lg) auto;
+            }
+            h1 {
+                font-size: 1.3rem;
+            }
+            .form-section h2 {
+                font-size: 1.2rem;
+            }
+        }
+
+        /* Estilos para o modelo do Orçamento (inicialmente oculto - para o PDF) */
+        .quote-template {
+            display: none;
+            padding: 50px;
+            box-sizing: border-box;
+            width: 210mm;
+            min-height: 297mm;
+            background-color: var(--container-bg-color);
+            font-family: var(--font-family-document);
+            font-size: var(--font-size-document-base);
+            position: relative;
+            color: var(--text-color);
+            line-height: 1.5;
+        }
+        
+        .quote-header {
+            text-align: center;
+            padding-bottom: 10px;
+            border-bottom: 1px solid var(--light-border-color);
+            margin-bottom: 30px;
+        }
+        .quote-header p {
+            margin: 0;
+            line-height: 1.2;
+        }
+        .quote-header strong {
+            font-size: var(--font-size-document-title);
+        }
+
+        .quote-title {
+            text-align: center;
+            margin-top: 20px;
+            margin-bottom: 30px;
+            font-size: var(--font-size-document-title);
+            text-transform: uppercase;
+            font-weight: bold;
+            color: var(--accent-color);
+        }
+
+        .quote-date {
+            text-align: right;
+            margin-bottom: 20px;
+        }
+
+        .quote-body {
+            margin-bottom: 20px;
+            text-align: justify;
+        }
+        
+        .quote-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+        
+        .quote-table th, .quote-table td {
+            border: 1px solid #000;
+            padding: 8px;
+            text-align: left;
+        }
+        
+        .quote-table th {
+            background-color: var(--accent-color);
+            color: white;
+            text-align: center;
+        }
+        
+        .quote-total {
+            font-weight: bold;
+            text-align: right;
+            margin-top: 10px;
+        }
+
+        .signature-line {
+            text-align: center;
+            margin-top: 50px;
+            margin-bottom: 5px;
+        }
+        .signature-line-text {
+            font-size: var(--font-size-base);
+            font-weight: bold;
+        }
+        
+        .quote-footer {
+            text-align: center;
+            padding-top: 10px;
+            border-top: 1px solid var(--light-border-color);
+            margin-top: 50px;
+        }
+        .quote-footer p {
+            margin: 0;
+            line-height: 1.2;
+        }
+
+        .text-centered {
+            text-align: center;
+        }
+    </style>
+</head>
+
+<body>
+    <header class="navbar">
+        <div class="logo">
+            <p>S. G. D. C. & H.</p>
+        </div>
+
+        <input type="checkbox" id="menu-toggle" class="menu-toggle">
+        <label for="menu-toggle" class="menu-icon" aria-label="Abrir Menu">&#9776;</label>
+
+        <nav class="menu">
+            <ul>
+                <li><a href="geracaodocumentosfinaceiro.html">Voltar Geração de Documentos</a></li>
+                <li><a href="index.html">Sair</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <div class="container">
+        <h1>Gerador de Orçamento para Serviços Clínicos e Hospitalares</h1>
+
+        <div class="form-section">
+            <h2>Dados da Clínica ou Hospital</h2>
+            <label for="clinicNome">Nome da Clínica/Hospital:</label>
+            <input type="text" id="clinicNome" placeholder="Ex: Hospital Central" required>
+
+            <label for="clinicCNPJ">CNPJ:</label>
+            <input type="text" id="clinicCNPJ" placeholder="Ex: 00.000.000/0001-00">
+            
+            <label for="cidadeEstado">Cidade e Estado (Emissão do Orçamento):</label>
+            <input type="text" id="cidadeEstado" placeholder="Ex: Londrina/PR" required>
+
+            <label for="clinicEndereco">Endereço:</label>
+            <input type="text" id="clinicEndereco" placeholder="Ex: Av. Principal, 1000, Bairro Novo" required>
+
+            <label for="clinicTelefone">Telefone:</label>
+            <input type="tel" id="clinicTelefone" placeholder="Ex: (43) 9999-8888">
+        </div>
+
+        <hr>
+
+        <div class="form-section">
+            <h2>Dados do Profissional Responsável</h2>
+            <label for="responsavelNome">Nome Completo do Profissional:</label>
+            <input type="text" id="responsavelNome" placeholder="Ex: Ana Souza" required>
+
+            <label for="responsavelRegistro">Registro Profissional:</label>
+            <input type="text" id="responsavelRegistro" placeholder="Ex: CRM/SP 123456 ou COREN/SP 78910" required>
+
+            <label for="responsavelCargo">Cargo/Função (Opcional):</label>
+            <input type="text" id="responsavelCargo" placeholder="Ex: Encarregado Administrativo">
+        </div>
+
+        <hr>
+
+        <div class="form-section">
+            <h2>Dados do Paciente/Cliente</h2>
+            <label for="pacienteNome">Nome Completo do Paciente/Cliente:</label>
+            <input type="text" id="pacienteNome" placeholder="Ex: Maria Souza" required>
+
+            <label for="pacienteCPF">CPF do Paciente/Cliente:</label>
+            <input type="text" id="pacienteCPF" placeholder="Ex: 123.456.789-00" required>
+        </div>
+
+        <hr>
+
+        <div class="form-section">
+            <h2>Dados do Orçamento</h2>
+            <label for="dataOrcamento">Data do Orçamento:</label>
+            <input type="date" id="dataOrcamento" required>
+
+            <label for="dataValidade">Validade do Orçamento:</label>
+            <input type="date" id="dataValidade" required>
+
+            <label for="descricaoOrcamento">Descrição Geral do Orçamento:</label>
+            <textarea id="descricaoOrcamento" rows="4" placeholder="Ex: Orçamento referente a procedimentos de cirurgia ortopédica e acompanhamento pós-operatório."></textarea>
+            
+            <h3>Serviços e Valores</h3>
+            <div class="service-input-group">
+                <input type="text" id="serviceName" placeholder="Nome do Serviço" required>
+                <input type="number" id="serviceValue" placeholder="Valor (R$)" step="0.01" min="0" required>
+                <button type="button" class="add-service-btn" onclick="addService()">Adicionar Serviço</button>
+            </div>
+            
+            <table class="service-table">
+                <thead>
+                    <tr>
+                        <th>Serviço/Procedimento</th>
+                        <th>Valor (R$)</th>
+                    </tr>
+                </thead>
+                <tbody id="serviceList">
+                </tbody>
+                <tfoot>
+                    <tr>
+                        <td class="total">Total:</td>
+                        <td class="total" id="totalValue">R$ 0,00</td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+
+        <button onclick="generatePDF()">Gerar Orçamento em PDF</button>
+    </div>
+
+    <div id="quote-template" class="quote-template">
+        <div class="quote-header">
+            <p><strong id="pdfClinicNome"></strong></p>
+            <p id="pdfClinicEndereco"></p>
+            <p>CNPJ: <span id="pdfClinicCNPJ"></span> | Tel: <span id="pdfClinicTelefone"></span></p>
+        </div>
+
+        <h2 class="quote-title">ORÇAMENTO PARA SERVIÇOS CLÍNICOS E HOSPITALARES</h2>
+
+        <p class="quote-date" id="pdfDataOrcamentoCidade"></p>
+
+        <div class="quote-body">
+            <p>Prezado(a) <strong><span id="pdfPacienteNome"></span></strong>,</p>
+            <p>Em resposta à sua solicitação, apresentamos o orçamento para os seguintes serviços clínicos e/ou hospitalares:</p>
+            
+            <p class="mt-2"><strong>Descrição:</strong> <span id="pdfDescricaoOrcamento"></span></p>
+
+            <table class="quote-table">
+                <thead>
+                    <tr>
+                        <th>Serviço/Procedimento</th>
+                        <th>Valor (R$)</th>
+                    </tr>
+                </thead>
+                <tbody id="pdfServiceList">
+                </tbody>
+            </table>
+            
+            <div class="quote-total">
+                <p><strong>Total Geral: <span id="pdfTotalValue"></span></strong></p>
+                <p><strong>Validade do Orçamento: <span id="pdfDataValidade"></span></strong></p>
+            </div>
+            
+            <p>Agradecemos o seu contato e permanecemos à disposição para quaisquer esclarecimentos.</p>
+        </div>
+        
+        <div class="signature-line">
+            <p>__________________________________________</p>
+            <p class="signature-line-text"><strong><span id="pdfResponsavelNomeAssinatura"></span></strong></p>
+            <p><span id="pdfResponsavelRegistro"></span></p>
+            <p><span id="pdfResponsavelCargo"></span></p>
+        </div>
+    </div>
+
+    <script>
+        // Array para armazenar os serviços e valores
+        let services = [];
+
+        // Função para formatar data (dd de [mês] de aaaa)
+        function formatarDataExtenso(dataString) {
+            if (!dataString) return '';
+            const date = new Date(dataString + 'T00:00:00');
+            const options = { day: 'numeric', month: 'long', year: 'numeric' };
+            return date.toLocaleDateString('pt-BR', options);
+        }
+
+        // Função para formatar valor monetário
+        function formatCurrency(value) {
+            return new Intl.NumberFormat('pt-BR', {
+                style: 'currency',
+                currency: 'BRL'
+            }).format(value);
+        }
+
+        // Preencher a data atual
+        document.addEventListener('DOMContentLoaded', () => {
+            const today = new Date();
+            const year = today.getFullYear();
+            const month = String(today.getMonth() + 1).padStart(2, '0');
+            const day = String(today.getDate()).padStart(2, '0');
+            document.getElementById('dataOrcamento').value = `${year}-${month}-${day}`;
+            
+            // Sugere a validade para 30 dias após a data atual
+            const validityDate = new Date();
+            validityDate.setDate(today.getDate() + 30);
+            const validityYear = validityDate.getFullYear();
+            const validityMonth = String(validityDate.getMonth() + 1).padStart(2, '0');
+            const validityDay = String(validityDate.getDate()).padStart(2, '0');
+            document.getElementById('dataValidade').value = `${validityYear}-${validityMonth}-${validityDay}`;
+        });
+
+        // Adiciona um serviço à lista
+        function addService() {
+            const serviceNameInput = document.getElementById('serviceName');
+            const serviceValueInput = document.getElementById('serviceValue');
+
+            const name = serviceNameInput.value.trim();
+            const value = parseFloat(serviceValueInput.value);
+
+            if (name && !isNaN(value) && value >= 0) {
+                services.push({ name, value });
+                updateServiceList();
+                serviceNameInput.value = '';
+                serviceValueInput.value = '';
+                serviceNameInput.focus();
+            } else {
+                alert("Por favor, insira um nome de serviço e um valor válido.");
+            }
+        }
+        
+        // Atualiza a tabela de serviços no formulário
+        function updateServiceList() {
+            const serviceList = document.getElementById('serviceList');
+            let total = 0;
+            
+            serviceList.innerHTML = ''; // Limpa a lista antes de preencher
+            
+            services.forEach(service => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${service.name}</td>
+                    <td>${formatCurrency(service.value)}</td>
+                `;
+                serviceList.appendChild(row);
+                total += service.value;
+            });
+            
+            document.getElementById('totalValue').textContent = formatCurrency(total);
+        }
+
+        async function generatePDF() {
+            // 1. Coletar dados do formulário
+            const clinicNome = document.getElementById('clinicNome').value;
+            const clinicCNPJ = document.getElementById('clinicCNPJ').value;
+            const cidadeEstado = document.getElementById('cidadeEstado').value;
+            const clinicEndereco = document.getElementById('clinicEndereco').value;
+            const clinicTelefone = document.getElementById('clinicTelefone').value;
+
+            const responsavelNome = document.getElementById('responsavelNome').value;
+            const responsavelRegistro = document.getElementById('responsavelRegistro').value;
+            const responsavelCargo = document.getElementById('responsavelCargo').value;
+
+            const pacienteNome = document.getElementById('pacienteNome').value;
+            const pacienteCPF = document.getElementById('pacienteCPF').value;
+
+            const dataOrcamento = document.getElementById('dataOrcamento').value;
+            const dataValidade = document.getElementById('dataValidade').value;
+            const descricaoOrcamento = document.getElementById('descricaoOrcamento').value;
+
+            // Validação simples
+            if (!clinicNome || !responsavelNome || !responsavelRegistro || !pacienteNome || !pacienteCPF || !dataOrcamento || !dataValidade || services.length === 0) {
+                alert("Por favor, preencha todos os campos obrigatórios e adicione pelo menos um serviço.");
+                return;
+            }
+
+            // 2. Preencher o modelo do orçamento oculto
+            document.getElementById('pdfClinicNome').textContent = clinicNome;
+            document.getElementById('pdfClinicEndereco').textContent = clinicEndereco;
+            document.getElementById('pdfClinicCNPJ').textContent = clinicCNPJ;
+            document.getElementById('pdfClinicTelefone').textContent = clinicTelefone;
+
+            document.getElementById('pdfResponsavelNomeAssinatura').textContent = responsavelNome;
+            document.getElementById('pdfResponsavelRegistro').textContent = responsavelRegistro;
+            document.getElementById('pdfResponsavelCargo').textContent = responsavelCargo ? `${responsavelCargo}` : '';
+
+            document.getElementById('pdfPacienteNome').textContent = pacienteNome;
+            document.getElementById('pdfDescricaoOrcamento').textContent = descricaoOrcamento;
+
+            const dataOrcamentoFormatada = formatarDataExtenso(dataOrcamento);
+            const dataValidadeFormatada = formatarDataExtenso(dataValidade);
+            
+            document.getElementById('pdfDataOrcamentoCidade').textContent = `${cidadeEstado}, ${dataOrcamentoFormatada}.`;
+            document.getElementById('pdfDataValidade').textContent = dataValidadeFormatada;
+            
+            // Preencher a tabela de serviços no PDF
+            const pdfServiceList = document.getElementById('pdfServiceList');
+            pdfServiceList.innerHTML = '';
+            let total = 0;
+            
+            services.forEach(service => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${service.name}</td>
+                    <td>${formatCurrency(service.value)}</td>
+                `;
+                pdfServiceList.appendChild(row);
+                total += service.value;
+            });
+            
+            document.getElementById('pdfTotalValue').textContent = formatCurrency(total);
+
+            // 3. Gerar o PDF
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF('p', 'mm', 'a4');
+            const element = document.getElementById('quote-template');
+
+            element.style.display = 'block';
+
+            try {
+                const canvas = await html2canvas(element, {
+                    scale: 2,
+                    useCORS: true,
+                    logging: true
+                });
+
+                const imgData = canvas.toDataURL('image/png');
+                const imgWidth = 210;
+                const pageHeight = 297;
+                const imgHeight = canvas.height * imgWidth / canvas.width;
+                let heightLeft = imgHeight;
+                let position = 0;
+
+                doc.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+                heightLeft -= pageHeight;
+
+                while (heightLeft >= 0) {
+                    position = heightLeft - imgHeight;
+                    doc.addPage();
+                    doc.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+                    heightLeft -= pageHeight;
+                }
+
+                doc.save('Orcamento_Servicos_Clinicos.pdf');
+
+            } catch (error) {
+                console.error("Erro ao gerar o PDF:", error);
+                alert("Ocorreu um erro ao gerar o PDF. Por favor, tente novamente.");
+            } finally {
+                element.style.display = 'none';
+            }
+        }
+    </script>
+</body>
+</html>

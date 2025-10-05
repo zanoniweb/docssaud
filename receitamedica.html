@@ -1,0 +1,753 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SISTEMA DE GERAÇÃO DE DOCUMENTOS: Receita Médica</title>
+
+    <!-- Adicionando Font Awesome para ícones como o de menu -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    
+    <!-- Incluindo as bibliotecas para geração de PDF (html2canvas e jspdf) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js" defer></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" defer></script>
+
+    <style>
+        /* Reset básico e configurações globais */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            /* Cores principais */
+            --primary-color: #004080; /* Azul escuro para navbar */
+            --accent-color: #28a745; /* Verde para botões e títulos de atestado */
+            --accent-dark-color: #1e7e34; /* Verde mais escuro para hover */
+            --text-color: #333;
+            --light-text-color: #555;
+            --background-color: #f4f4f4;
+            --container-bg-color: #fff;
+            --section-bg-color: #f9f9f9;
+            --border-color: #ccc;
+            --light-border-color: #ddd;
+
+            /* Fontes */
+            --font-family-main: 'Arial', sans-serif;
+            --font-family-document: 'Times New Roman', serif;
+
+            /* Tamanhos de fonte */
+            --font-size-base: 1rem; /* 16px */
+            --font-size-sm: 0.9rem; /* 14.4px */
+            --font-size-md: 1.1rem; /* 17.6px */
+            --font-size-lg: 1.6rem; /* 25.6px - para logo */
+            --font-size-xl: 2em; /* Para ícones */
+            --font-size-h1: 1.8rem; /* Para h1 do container */
+            --font-size-h2: 1.5rem; /* Para h2 do form-section */
+            --font-size-document-base: 12pt; /* Para texto do PDF */
+            --font-size-document-title: 16pt; /* Para título do PDF */
+
+            /* Espaçamentos */
+            --spacing-xs: 8px;
+            --spacing-sm: 10px;
+            --spacing-md: 15px;
+            --spacing-lg: 20px;
+            --spacing-xl: 30px;
+            --spacing-xxl: 40px;
+        }
+
+        /* Body e Layout Geral */
+        body {
+            font-family: var(--font-family-main);
+            line-height: 1.6;
+            margin: 0;
+            padding-top: 80px;
+            background-color: var(--background-color);
+            color: var(--text-color);
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        /* Container principal do formulário */
+        .container {
+            max-width: 800px;
+            width: 95%;
+            margin: var(--spacing-lg) auto;
+            padding: var(--spacing-xl);
+            background-color: var(--container-bg-color);
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            text-align: center;
+            color: var(--accent-dark-color);
+            margin-bottom: var(--spacing-xl);
+            font-size: var(--font-size-h1);
+        }
+
+        /* Seções do Formulário */
+        .form-section {
+            margin-bottom: var(--spacing-lg);
+            padding: var(--spacing-md);
+            border: 1px solid var(--light-border-color);
+            border-radius: 5px;
+            background-color: var(--section-bg-color);
+        }
+
+        .form-section h2 {
+            color: var(--accent-dark-color);
+            margin-top: 0;
+            margin-bottom: var(--spacing-md);
+            border-bottom: 2px solid #eee;
+            padding-bottom: var(--spacing-xs);
+            font-size: var(--font-size-h2);
+        }
+
+        /* Novo estilo para agrupar label e input */
+        .form-group {
+            margin-bottom: var(--spacing-md);
+        }
+
+        label {
+            display: block;
+            margin-bottom: var(--spacing-xs);
+            font-weight: bold;
+            color: var(--light-text-color);
+            cursor: pointer;
+        }
+
+        input[type="text"],
+        input[type="tel"],
+        textarea,
+        select {
+            width: 100%;
+            padding: var(--spacing-sm);
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            font-size: var(--font-size-base);
+            box-sizing: border-box;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
+        }
+        
+        select {
+          background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23004080%22%20d%3D%22M287%20197.3l-137.9-137.9c-4.9-4.9-12.8-4.9-17.7%200L5.4%20197.3c-4.9%204.9-4.9%2012.8%200%2017.7l15%2015c4.9%204.9%2012.8%204.9%2017.7%200l110.8-110.8%20110.8%20110.8c4.9%204.9%2012.8%204.9%2017.7%200l15-15c4.9-4.9%204.9-12.8%200-17.7z%22%2F%3E%3C%2Fsvg%3E');
+          background-repeat: no-repeat;
+          background-position: right 10px center;
+          background-size: 10px;
+        }
+
+
+        input:focus,
+        textarea:focus,
+        select:focus {
+            border-color: var(--accent-color);
+            outline: none;
+            box-shadow: 0 0 5px rgba(var(--accent-color), 0.25);
+            outline: 2px solid var(--accent-color);
+            outline-offset: 2px;
+        }
+
+        button {
+            display: block;
+            width: 100%;
+            padding: var(--spacing-md);
+            background-color: var(--accent-color);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: var(--font-size-md);
+            cursor: pointer;
+            transition: background-color 0.3s ease, transform 0.1s ease;
+            margin-top: var(--spacing-lg);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        button:hover {
+            background-color: var(--accent-dark-color);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+        }
+
+        button:active {
+            transform: translateY(0);
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+        }
+
+        hr {
+            border: 0;
+            height: 1px;
+            background-image: linear-gradient(to right, rgba(0, 0, 0, 0), rgba(0, 0, 0, 0.75), rgba(0, 0, 0, 0));
+            margin: var(--spacing-xl) 0;
+        }
+
+        /* Estilos do Menu de Navegação */
+        .navbar {
+            background-color: var(--primary-color);
+            color: white;
+            padding: var(--spacing-lg) var(--spacing-xl);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            z-index: 1000;
+        }
+
+        .logo p {
+            color: white;
+            font-size: var(--font-size-lg);
+            font-weight: bold;
+        }
+
+        .menu-icon {
+            font-size: var(--font-size-xl);
+            display: none; /* Oculta o ícone em telas maiores */
+            cursor: pointer;
+            color: white;
+            outline: 2px solid transparent;
+            outline-offset: 4px;
+            transition: outline-color 0.3s ease;
+        }
+
+        .menu-icon:focus {
+            outline-color: #ffd700;
+        }
+
+        .menu-toggle {
+            display: none;
+        }
+
+        .menu ul {
+            list-style: none;
+            display: flex;
+            gap: 50px;
+        }
+        
+        .menu ul li a {
+            color: white;
+            text-decoration: none;
+            font-size: var(--font-size-md);
+            transition: color 0.3s, background-color 0.3s;
+            padding: var(--spacing-xs) 0;
+            display: block;
+        }
+
+        .menu ul li a:hover,
+        .menu ul li a:focus {
+            color: #ffd700;
+            outline: none;
+        }
+
+        /* MEDIA QUERIES */
+        @media (max-width: 768px) {
+            body {
+                padding-top: 65px;
+            }
+            .navbar {
+                padding: var(--spacing-md) var(--spacing-lg);
+            }
+            .logo p {
+                font-size: 1.4em;
+            }
+            .menu ul {
+                flex-direction: column;
+                position: absolute;
+                top: 65px;
+                left: 0;
+                background-color: var(--primary-color);
+                width: 100%;
+                display: none; /* Oculto por padrão no mobile */
+                box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+                gap: 0;
+                max-height: calc(100vh - 65px);
+                overflow-y: auto;
+            }
+            .menu ul li {
+                padding: var(--spacing-md) var(--spacing-xl);
+                border-top: 1px solid rgba(255, 255, 255, 0.2);
+            }
+            .menu ul li:first-child {
+                border-top: none;
+            }
+            .menu-icon {
+                display: block; /* Mostra o ícone em telas menores */
+                z-index: 1001;
+            }
+            .menu-toggle:checked ~ .menu ul {
+                display: flex; /* Exibe o menu quando o checkbox está marcado */
+            }
+            .container {
+                padding: var(--spacing-lg);
+                margin: var(--spacing-lg) auto;
+            }
+            h1 {
+                font-size: 1.5rem;
+                margin-bottom: var(--spacing-lg);
+            }
+            .form-section h2 {
+                font-size: 1.3rem;
+                margin-bottom: var(--spacing-md);
+            }
+            input[type="text"],
+            input[type="tel"],
+            textarea,
+            select {
+                font-size: var(--font-size-base);
+                padding: var(--spacing-sm);
+            }
+            button {
+                font-size: var(--font-size-base);
+                padding: var(--spacing-sm);
+            }
+        }
+        
+        /* Estilo do Modal de Erro */
+        .modal {
+            display: none; /* Oculto por padrão */
+            position: fixed;
+            z-index: 2000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.4);
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background-color: #fefefe;
+            padding: 20px;
+            border: 1px solid #888;
+            border-radius: 8px;
+            width: 90%;
+            max-width: 400px;
+            text-align: center;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+
+        .close-button {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+        }
+
+        .close-button:hover,
+        .close-button:focus {
+            color: black;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        .modal-content h3 {
+            color: #dc3545;
+            margin-bottom: 15px;
+        }
+        
+        /* Estilos para o modelo da Receita (inicialmente oculto - para o PDF) */
+        .medical-prescription-template {
+            display: none;
+            padding: 50px;
+            box-sizing: border-box;
+            width: 210mm;
+            min-height: 297mm;
+            background-color: var(--container-bg-color);
+            font-family: var(--font-family-document);
+            font-size: var(--font-size-document-base);
+            position: relative;
+            color: var(--text-color);
+            line-height: 1.5;
+        }
+
+        .prescription-header {
+            text-align: center;
+            padding-bottom: 10px;
+            border-bottom: 1px solid var(--light-border-color);
+            margin-bottom: 20px;
+        }
+        .prescription-header p {
+            margin: 0;
+            line-height: 1.2;
+        }
+        .prescription-header strong {
+            font-size: var(--font-size-document-title);
+        }
+
+        .prescription-title {
+            text-align: center;
+            margin-top: 15px;
+            margin-bottom: 15px;
+            font-size: 1.5em;
+            text-transform: uppercase;
+            font-weight: bold;
+            color: var(--accent-dark-color);
+        }
+
+        .prescription-body {
+            min-height: 150mm; /* Espaço para a receita */
+            padding: 10px;
+            border: 1px solid #000;
+            margin-bottom: 20px;
+        }
+
+        .prescription-body h3 {
+            font-size: 1.2em;
+            margin-bottom: 10px;
+            text-decoration: underline;
+        }
+
+        .prescription-body p {
+            white-space: pre-wrap; /* Para preservar quebras de linha da textarea */
+            margin-bottom: 10px;
+        }
+
+        .patient-info {
+            margin-bottom: 20px;
+            border-bottom: 1px dashed var(--light-border-color);
+            padding-bottom: 10px;
+        }
+
+        .prescription-footer {
+            text-align: center;
+            padding-top: 10px;
+            border-top: 1px solid var(--light-border-color);
+            margin-top: 30px;
+        }
+        .prescription-footer p {
+            margin: 0;
+            line-height: 1.2;
+        }
+        .text-centered {
+            text-align: center;
+        }
+
+        .signature-area {
+            text-align: center;
+            margin-top: 50px;
+        }
+
+        .signature-line {
+            border-bottom: 1px solid #000;
+            width: 60%;
+            margin: 0 auto 5px;
+        }
+        .signature-text {
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <header class="navbar">
+        <div class="logo">
+            <p>S. G. D. C. & H.</p>
+        </div>
+
+        <!-- Checkbox oculto para controlar o menu em dispositivos móveis -->
+        <input type="checkbox" id="menu-toggle-checkbox" class="menu-toggle">
+        
+        <!-- Menu de navegação -->
+        <nav class="menu">
+        <ul>
+            <li><a href="geracaodocumentosmedicos.html">Voltar Geração de Documentos</a></li>
+            <li><a href="index.html">Sair</a></li>
+        </ul>
+    </nav>
+        
+        <!-- Ícone do menu para telas menores -->
+        <label for="menu-toggle-checkbox" class="menu-icon" aria-label="Abrir Menu">
+            <i class="fa-solid fa-bars"></i>
+        </label>
+    </header>
+
+    <div class="container">
+        <h1>Gerador de Receita Médica</h1>
+
+        <div class="form-section">
+            <h2>Dados da Clínica ou Hospital</h2>
+            <div class="form-group">
+                <label for="clinicNome">Nome da Clínica/Hospital:</label>
+                <input type="text" id="clinicNome" placeholder="Ex: Hospital Central" required>
+            </div>
+            <div class="form-group">
+                <label for="clinicCNPJ">CNPJ:</label>
+                <input type="text" id="clinicCNPJ" placeholder="Ex: 00.000.000/0001-00">
+            </div>
+            <div class="form-group">
+                <label for="cidadeEstado">Cidade e Estado (Emissão da Receita):</label>
+                <input type="text" id="cidadeEstado" placeholder="Ex: Londrina/PR" required>
+            </div>
+            <div class="form-group">
+                <label for="clinicEndereco">Endereço:</label>
+                <input type="text" id="clinicEndereco" placeholder="Ex: Av. Principal, 1000, Bairro Novo" required>
+            </div>
+            <div class="form-group">
+                <label for="clinicTelefone">Telefone:</label>
+                <input type="tel" id="clinicTelefone" placeholder="Ex: (43) 9999-8888">
+            </div>
+        </div>
+
+        <hr>
+
+        <div class="form-section">
+            <h2>Dados do Médico(a)</h2>
+            <div class="form-group">
+                <label for="medicoNome">Nome Completo do Médico(a):</label>
+                <input type="text" id="medicoNome" placeholder="Ex: Dr. João da Silva" required>
+            </div>
+            <div class="form-group">
+                <label for="medicoCRM">CRM / Outro Registro:</label>
+                <input type="text" id="medicoCRM" placeholder="Ex: CRM/SP 123456" required>
+            </div>
+            <div class="form-group">
+                <label for="medicoEspecialidade">Especialidade (Opcional):</label>
+                <select id="medicoEspecialidade">
+                    <option value="">Selecione uma especialidade</option>
+                    <option value="Alergologia">Alergologia</option>
+                    <option value="Angiologia">Angiologia</option>
+                    <option value="Cardiologia">Cardiologia</option>
+                    <option value="Cirurgia Geral">Cirurgia Geral</option>
+                    <option value="Clínica Médica">Clínica Médica</option>
+                    <option value="Dermatologia">Dermatologia</option>
+                    <option value="Endocrinologia">Endocrinologia</option>
+                    <option value="Gastroenterologia">Gastroenterologia</option>
+                    <option value="Geriatria">Geriatria</option>
+                    <option value="Ginecologia e Obstetrícia">Ginecologia e Obstetrícia</option>
+                    <option value="Hematologia">Hematologia</option>
+                    <option value="Infectologia">Infectologia</option>
+                    <option value="Nefrologia">Nefrologia</option>
+                    <option value="Neurologia">Neurologia</option>
+                    <option value="Oftalmologia">Oftalmologia</option>
+                    <option value="Ortopedia e Traumatologia">Ortopedia e Traumatologia</option>
+                    <option value="Otorrinolaringologia">Otorrinolaringologia</option>
+                    <option value="Pediatria">Pediatria</option>
+                    <option value="Pneumologia">Pneumologia</option>
+                    <option value="Psiquiatria">Psiquiatria</option>
+                    <option value="Reumatologia">Reumatologia</option>
+                    <option value="Urologia">Urologia</option>
+                </select>
+            </div>
+        </div>
+
+        <hr>
+
+        <div class="form-section">
+            <h2>Dados do Paciente</h2>
+            <div class="form-group">
+                <label for="pacienteNome">Nome Completo do Paciente:</label>
+                <input type="text" id="pacienteNome" placeholder="Ex: Maria Souza" required>
+            </div>
+            <div class="form-group">
+                <label for="pacienteCPF">CPF do Paciente:</label>
+                <input type="text" id="pacienteCPF" placeholder="Ex: 123.456.789-00" required>
+            </div>
+        </div>
+
+        <hr>
+
+        <div class="form-section">
+            <h2>Prescrição</h2>
+            <div class="form-group">
+                <label for="receitaMedicamento">Medicamento, Dosagem e Instruções:</label>
+                <textarea id="receitaMedicamento" rows="10" placeholder="Ex:
+- Amoxicilina 500mg, 1 comprimido a cada 8 horas por 7 dias.
+- Dipirona 500mg, tomar 1 comprimido em caso de dor ou febre.
+" required></textarea>
+            </div>
+        </div>
+
+        <button onclick="generatePDF()">Gerar Receita em PDF</button>
+    </div>
+
+    <!-- Modal para exibir mensagens de erro/aviso -->
+    <div id="message-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-button">&times;</span>
+            <h3 id="modal-title"></h3>
+            <p id="modal-message"></p>
+        </div>
+    </div>
+
+    <!--
+      Este é o template oculto da receita médica.
+      Ele será preenchido com os dados do formulário e depois
+      convertido em uma imagem por `html2canvas` para a geração do PDF.
+    -->
+    <div id="medical-prescription-template" class="medical-prescription-template">
+        <header class="prescription-header">
+            <p><strong id="pdfClinicNome"></strong></p>
+            <p id="pdfClinicEndereco"></p>
+            <p>CNPJ: <span id="pdfClinicCNPJ"></span> | Tel: <span id="pdfClinicTelefone"></span></p>
+        </header>
+
+        <main>
+            <h2 class="prescription-title">RECEITA MÉDICA</h2>
+
+            <div class="patient-info">
+                <p><strong>Paciente:</strong> <span id="pdfPacienteNome"></span> | <strong>CPF:</strong> <span id="pdfPacienteCPF"></span></p>
+                <p>Data de emissão: <span id="pdfDataReceita"></span></p>
+            </div>
+
+            <div class="prescription-body">
+                <h3>Prescrição:</h3>
+                <p id="pdfReceitaMedicamento"></p>
+            </div>
+
+            <div class="signature-area">
+                <p class="signature-line"></p>
+                <p class="signature-text"><strong><span id="pdfMedicoNomeAssinatura"></span></strong></p>
+                <p><span id="pdfMedicoCRM"></span></p>
+                <p><span id="pdfMedicoEspecialidade"></span></p>
+            </div>
+        </main>
+
+        <footer class="prescription-footer">
+            <p id="pdfRodapeInfo"></p>
+        </footer>
+    </div>
+
+    <script>
+        /**
+         * Exibe um modal com uma mensagem para o usuário.
+         * @param {string} title - O título da mensagem (ex: "Erro", "Atenção").
+         * @param {string} message - A mensagem a ser exibida.
+         */
+        function showModal(title, message) {
+            const modal = document.getElementById('message-modal');
+            const modalTitle = document.getElementById('modal-title');
+            const modalMessage = document.getElementById('modal-message');
+            const closeButton = modal.querySelector('.close-button');
+
+            modalTitle.textContent = title;
+            modalMessage.textContent = message;
+            modal.style.display = 'flex';
+
+            // Fecha o modal ao clicar no botão 'x'
+            closeButton.onclick = function() {
+                modal.style.display = 'none';
+            }
+
+            // Fecha o modal ao clicar fora dele
+            window.onclick = function(event) {
+                if (event.target == modal) {
+                    modal.style.display = 'none';
+                }
+            }
+        }
+
+        /**
+         * Função para formatar a data (dd de [mês] de aaaa) a partir de um objeto Date.
+         * @param {Date} date - O objeto Date a ser formatado.
+         * @returns {string} - A data formatada.
+         */
+        function formatarDataExtenso(date) {
+            if (!date instanceof Date) return '';
+            
+            const options = { day: 'numeric', month: 'long', year: 'numeric' };
+            return new Intl.DateTimeFormat('pt-BR', options).format(date);
+        }
+
+        /**
+         * Função assíncrona que coleta os dados do formulário, preenche o
+         * template oculto e gera o PDF.
+         */
+        async function generatePDF() {
+            // 1. Coletar dados do formulário
+            const clinicNome = document.getElementById('clinicNome').value;
+            const clinicCNPJ = document.getElementById('clinicCNPJ').value;
+            const cidadeEstado = document.getElementById('cidadeEstado').value;
+            const clinicEndereco = document.getElementById('clinicEndereco').value;
+            const clinicTelefone = document.getElementById('clinicTelefone').value;
+            const medicoNome = document.getElementById('medicoNome').value;
+            const medicoCRM = document.getElementById('medicoCRM').value;
+            const medicoEspecialidade = document.getElementById('medicoEspecialidade').value;
+            const pacienteNome = document.getElementById('pacienteNome').value;
+            const pacienteCPF = document.getElementById('pacienteCPF').value;
+            const receitaMedicamento = document.getElementById('receitaMedicamento').value;
+            
+            // Pega a data atual do computador
+            const dataReceita = new Date();
+
+            // Validação simples dos campos obrigatórios
+            if (!clinicNome || !medicoNome || !medicoCRM || !pacienteNome || !receitaMedicamento) {
+                showModal("Atenção", "Por favor, preencha todos os campos obrigatórios (Clínica, Médico, Paciente, Prescrição).");
+                return;
+            }
+
+            // 2. Preencher o modelo da receita oculto
+            document.getElementById('pdfClinicNome').textContent = clinicNome;
+            document.getElementById('pdfClinicEndereco').textContent = clinicEndereco;
+            document.getElementById('pdfClinicCNPJ').textContent = clinicCNPJ;
+            document.getElementById('pdfClinicTelefone').textContent = clinicTelefone;
+
+            document.getElementById('pdfMedicoNomeAssinatura').textContent = medicoNome;
+            document.getElementById('pdfMedicoCRM').textContent = medicoCRM;
+            document.getElementById('pdfMedicoEspecialidade').textContent = medicoEspecialidade ? medicoEspecialidade : '';
+
+            document.getElementById('pdfPacienteNome').textContent = pacienteNome;
+            document.getElementById('pdfPacienteCPF').textContent = pacienteCPF;
+            
+            // Popula a data de emissão usando a data formatada
+            document.getElementById('pdfDataReceita').textContent = formatarDataExtenso(dataReceita);
+
+            document.getElementById('pdfReceitaMedicamento').textContent = receitaMedicamento;
+            
+            // Popula o rodapé com cidade/estado e data
+            document.getElementById('pdfRodapeInfo').textContent = `${cidadeEstado}, ${formatarDataExtenso(dataReceita)}.`;
+
+            // 3. Gerar o PDF
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF('p', 'mm', 'a4');
+            const element = document.getElementById('medical-prescription-template');
+
+            // Torna o template visível para que o html2canvas possa renderizá-lo
+            element.style.display = 'block';
+
+            try {
+                // Cria o canvas a partir do elemento HTML
+                const canvas = await html2canvas(element, {
+                    scale: 2, // Aumenta a escala para melhorar a qualidade do PDF
+                    useCORS: true,
+                    logging: false // Desativa o log no console
+                });
+
+                const imgData = canvas.toDataURL('image/png');
+                const imgWidth = 210; // Largura do A4 em mm
+                const pageHeight = 297; // Altura do A4 em mm
+                const imgHeight = canvas.height * imgWidth / canvas.width;
+                let heightLeft = imgHeight;
+                let position = 0;
+
+                // Adiciona a imagem do canvas ao PDF
+                doc.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+                heightLeft -= pageHeight;
+
+                // Lógica para adicionar novas páginas se o conteúdo for muito longo
+                while (heightLeft >= 0) {
+                    position = heightLeft - imgHeight;
+                    doc.addPage();
+                    doc.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+                    heightLeft -= pageHeight;
+                }
+
+                doc.save('Receita_Medica.pdf');
+
+            } catch (error) {
+                console.error("Erro ao gerar o PDF:", error);
+                showModal("Erro", "Ocorreu um erro ao gerar o PDF. Por favor, verifique o console para mais detalhes e tente novamente.");
+            } finally {
+                // Oculta o template novamente após a geração do PDF
+                element.style.display = 'none';
+            }
+        }
+    </script>
+</body>
+</html>

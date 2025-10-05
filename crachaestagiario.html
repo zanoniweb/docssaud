@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SISTEMA DE GERAÇÃO DE CRACHÁS - ESTAGIÁRIOS</title>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js" defer></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" defer></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrious/4.0.2/qrious.min.js"></script>
+
+    <style>
+        /* Reset básico e configurações globais */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary-color: #004080; /* Azul escuro */
+            --accent-color: #28a745; /* Verde */
+            --accent-dark-color: #1e7e34; /* Verde escuro */
+            --text-color: #333;
+            --light-text-color: #555;
+            --background-color: #f4f4f4;
+            --container-bg-color: #fff;
+            --section-bg-color: #f9f9f9;
+            --border-color: #ccc;
+            --light-border-color: #ddd;
+            
+            --font-family-main: 'Arial', sans-serif;
+            
+            --font-size-base: 1rem;
+            --font-size-sm: 0.9rem;
+            --font-size-md: 1.1rem;
+            --font-size-lg: 1.6rem;
+            --font-size-h1: 1.8rem;
+            --font-size-h2: 1.5rem;
+            
+            --spacing-xs: 8px;
+            --spacing-sm: 10px;
+            --spacing-md: 15px;
+            --spacing-lg: 20px;
+            --spacing-xl: 30px;
+        }
+
+        body {
+            font-family: var(--font-family-main);
+            line-height: 1.6;
+            margin: 0;
+            padding-top: 80px;
+            background-color: var(--background-color);
+            color: var(--text-color);
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 800px;
+            width: 95%;
+            margin: var(--spacing-lg) auto;
+            padding: var(--spacing-xl);
+            background-color: var(--container-bg-color);
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            text-align: center;
+            color: var(--primary-color);
+            margin-bottom: var(--spacing-xl);
+            font-size: var(--font-size-h1);
+        }
+
+        .form-section {
+            margin-bottom: var(--spacing-lg);
+            padding: var(--spacing-md);
+            border: 1px solid var(--light-border-color);
+            border-radius: 5px;
+            background-color: var(--section-bg-color);
+        }
+
+        .form-section h2 {
+            color: var(--primary-color);
+            margin-top: 0;
+            margin-bottom: var(--spacing-md);
+            border-bottom: 2px solid #eee;
+            padding-bottom: var(--spacing-xs);
+            font-size: var(--font-size-h2);
+        }
+
+        label {
+            display: block;
+            margin-bottom: var(--spacing-xs);
+            font-weight: bold;
+            color: var(--light-text-color);
+            cursor: pointer;
+        }
+
+        input[type="text"] {
+            width: 100%;
+            padding: var(--spacing-sm);
+            margin-bottom: var(--spacing-md);
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            font-size: var(--font-size-base);
+        }
+        
+        button {
+            display: block;
+            width: 100%;
+            padding: var(--spacing-md);
+            background-color: var(--accent-color);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: var(--font-size-md);
+            cursor: pointer;
+            transition: background-color 0.3s ease, transform 0.1s ease;
+            margin-top: var(--spacing-lg);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        button:hover {
+            background-color: var(--accent-dark-color);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+        }
+        
+        .navbar {
+            background-color: var(--primary-color);
+            color: white;
+            padding: var(--spacing-lg) var(--spacing-xl);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            z-index: 1000;
+        }
+
+        .logo p {
+            color: white;
+            font-size: var(--font-size-lg);
+            font-weight: bold;
+        }
+
+        .menu ul {
+            list-style: none;
+            display: flex;
+            gap: 50px;
+        }
+
+        .menu ul li a {
+            color: white;
+            text-decoration: none;
+            font-size: var(--font-size-md);
+            transition: color 0.3s;
+        }
+
+        .menu ul li a:hover {
+            color: #ffd700;
+        }
+
+        /* --- Estilos do Crachá (oculto para a visualização, mas renderizável para o html2canvas) --- */
+        .id-card-template {
+            position: absolute;
+            left: -9999px;
+            top: -9999px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-between;
+            width: 86mm;
+            height: 54mm;
+            padding: 10px;
+            box-sizing: border-box;
+            background: linear-gradient(145deg, #e6e6e6, #ffffff);
+            font-family: var(--font-family-main);
+            color: var(--text-color);
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .id-card-header, .id-card-body, .id-card-footer {
+            width: 100%;
+            text-align: center;
+        }
+
+        .id-card-header h3 {
+            font-size: 14pt;
+            color: var(--primary-color);
+            margin: 0;
+            text-transform: uppercase;
+        }
+
+        .id-card-header p {
+            font-size: 8pt;
+            color: #777;
+            margin: 0;
+        }
+
+        .id-card-body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            flex-grow: 1;
+            padding: 5px 0;
+        }
+        
+        .profile-pic-placeholder {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            border: 3px dashed var(--primary-color);
+            background-color: #f0f0f0;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 8pt;
+            color: #888;
+            text-align: center;
+            line-height: 1.2;
+            padding: 5px;
+        }
+
+        .professional-name {
+            font-size: 12pt;
+            font-weight: bold;
+            color: var(--primary-color);
+            margin: 5px 0 2px;
+            text-transform: uppercase;
+        }
+        
+        .professional-role {
+            font-size: 10pt;
+            color: var(--accent-dark-color);
+            font-weight: 600;
+            margin: 0;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            width: 100%;
+            padding: 0 5px;
+        }
+        
+        .professional-id {
+            font-size: 8pt;
+            color: #555;
+            margin-top: 5px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            width: 100%;
+            padding: 0 5px;
+        }
+
+        .id-card-footer {
+            display: flex;
+            justify-content: center;
+            margin-top: 5px;
+        }
+
+        .id-card-footer canvas {
+            width: 60px !important;
+            height: 60px !important;
+        }
+
+        /* Estilos responsivos simplificados */
+        @media (max-width: 768px) {
+            body {
+                padding-top: 65px;
+            }
+            .navbar {
+                padding: var(--spacing-md) var(--spacing-lg);
+                flex-direction: column;
+                align-items: center;
+            }
+            .logo p {
+                font-size: 1.4em;
+                margin-bottom: 10px;
+            }
+            .menu ul {
+                gap: 20px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <header class="navbar">
+        <div class="logo">
+            <p>S. G. D. C. & H.</p>
+        </div>
+        <nav class="menu">
+            <ul>
+                <li><a href="geracaodocumentosrh.html">Voltar</a></li>
+                <li><a href="index.html">Sair</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <div class="container">
+        <h1>Gerador de Crachá de Estagiário</h1>
+
+        <div class="form-section">
+            <h2>Dados da Empresa/Instituição</h2>
+            <label for="companyNome">Nome da Empresa/Instituição:</label>
+            <input type="text" id="companyNome" placeholder="Ex: Tech Solutions Ltda." required>
+        </div>
+
+        <hr>
+
+        <div class="form-section">
+            <h2>Dados do Estagiário</h2>
+            <label for="estagiarioNome">Nome Completo do Estagiário:</label>
+            <input type="text" id="estagiarioNome" placeholder="Ex: Ana Clara Santos" required>
+            <label for="estagiarioCurso">Curso:</label>
+            <input type="text" id="estagiarioCurso" placeholder="Ex: Engenharia de Software" required>
+            <label for="estagiarioMatricula">Matrícula/ID:</label>
+            <input type="text" id="estagiarioMatricula" placeholder="Ex: 2025001" required>
+        </div>
+
+        <button onclick="generateIdCardPDF()">Gerar Crachá em PDF</button>
+    </div>
+
+    <div id="id-card-template" class="id-card-template">
+        <div class="id-card-header">
+            <h3 id="idCardCompanyName"></h3>
+            <p>ESTAGIÁRIO(A)</p>
+        </div>
+
+        <div class="id-card-body">
+            <div class="profile-pic-placeholder">
+                Colar Foto 3x4
+            </div>
+            <p class="professional-name" id="idCardName"></p>
+            <p class="professional-role" id="idCardCourse"></p>
+            <p class="professional-id" id="idCardId"></p>
+        </div>
+
+        <div class="id-card-footer">
+            <canvas id="qrCodeCanvas"></canvas>
+        </div>
+    </div>
+
+    <script>
+        async function generateIdCardPDF() {
+            const companyName = document.getElementById('companyNome').value;
+            const estagiarioNome = document.getElementById('estagiarioNome').value;
+            const estagiarioCurso = document.getElementById('estagiarioCurso').value;
+            const estagiarioMatricula = document.getElementById('estagiarioMatricula').value;
+
+            // Validação simples
+            if (!companyName || !estagiarioNome || !estagiarioCurso || !estagiarioMatricula) {
+                alert("Por favor, preencha todos os campos.");
+                return;
+            }
+
+            // 1. Preencher o modelo do crachá
+            document.getElementById('idCardCompanyName').textContent = companyName;
+            document.getElementById('idCardName').textContent = estagiarioNome;
+            document.getElementById('idCardCourse').textContent = estagiarioCurso;
+            document.getElementById('idCardId').textContent = `Matrícula: ${estagiarioMatricula}`;
+
+            // 2. Gerar QR Code com o número de matrícula
+            const qrCodeCanvas = document.getElementById('qrCodeCanvas');
+            const qr = new QRious({
+                element: qrCodeCanvas,
+                value: estagiarioMatricula,
+                size: 60,
+                padding: 0
+            });
+            
+            // 3. Obter o elemento do crachá
+            const idCardTemplate = document.getElementById('id-card-template');
+
+            try {
+                // 4. Capturar o crachá com html2canvas
+                const canvas = await html2canvas(idCardTemplate, {
+                    scale: 3,
+                    useCORS: true,
+                    logging: true
+                });
+
+                const imgData = canvas.toDataURL('image/png');
+                const { jsPDF } = window.jspdf;
+                
+                // Dimensões do crachá em milímetros (86mm x 54mm)
+                const cardWidth = 86;
+                const cardHeight = 54;
+                
+                const doc = new jsPDF({
+                    orientation: 'landscape',
+                    unit: 'mm',
+                    format: [cardWidth, cardHeight]
+                });
+
+                doc.addImage(imgData, 'PNG', 0, 0, cardWidth, cardHeight);
+                doc.save('Cracha_Estagiario.pdf');
+
+            } catch (error) {
+                console.error("Erro ao gerar o PDF:", error);
+                alert("Ocorreu um erro ao gerar o PDF. Por favor, tente novamente.");
+            }
+        }
+    </script>
+</body>
+</html>
